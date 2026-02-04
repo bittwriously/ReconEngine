@@ -1,0 +1,13 @@
+[project]
+Name = "Recon Engine Base"
+Version = "1.0.0"
+
+[project.run]
+EntryPoint = "assets/scenes/main.rscn"
+
+[project.renderer]
+RenderEngine = "Raylib" # only supported one is Raylib for now.
+Vsync = true
+Fullscreen = false
+ScreenWidth = 800
+ScreenHeight = 600
