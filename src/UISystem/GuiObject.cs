@@ -81,6 +81,7 @@ public abstract class GuiObject : ReconEntity
     public Coords2 Transform { get; private set; }
     public OOBB2 GlobalBounds { get; private set; }
     public GuiMouseState MouseState { get; protected set; }
+    public GuiContainer? AssignedContainer { get; protected set; }
 
     public event MouseEvent? OnMouseEnter;
     public event MouseEvent? OnMouseLeave;
@@ -139,7 +140,7 @@ public abstract class GuiObject : ReconEntity
         _lastScreenSize = screenSize;
         _transformdirty = false;
 
-        CurrentWorld?.WorldGuiGrid.UpdateObject(this);
+        AssignedContainer?.ContainerGrid.UpdateObject(this);
 
         foreach (ReconEntity entity in Children) if (entity is GuiObject obj) obj.UpdateTransform(screenSize);
     }
@@ -170,8 +171,13 @@ public abstract class GuiObject : ReconEntity
         UpdateChildrenOrder();
         ParentChanged += (sender, oldParent) =>
         {
-            oldParent?.CurrentWorld?.WorldGuiGrid.UnregisterObject(this);
-            CurrentWorld?.WorldGuiGrid.RegisterObject(this);
+            AssignedContainer?.ContainerGrid.UnregisterObject(this);
+
+            if (Parent is GuiContainer container) AssignedContainer = container;
+            else if (Parent is GuiObject obj) AssignedContainer = obj.AssignedContainer;
+            else AssignedContainer = null;
+            
+            AssignedContainer?.ContainerGrid.RegisterObject(this);
         };
     }
 

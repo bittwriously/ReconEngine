@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using ReconEngine.InputSystem;
 using ReconEngine.RenderUtils;
 using ReconEngine.UISystem;
 using ReconEngine.WorldSystem;
@@ -87,7 +88,7 @@ internal static class ReconCore
             /// 3D ///
              
             /// INPUT SYSTEM ///
-            MainWorld.WorldInputSystem.UpdateAll();
+            ReconInputSystem.UpdateAll();
             /// INPUT SYSTEM ///
             
             /// RENDER CALL ///

@@ -1,4 +1,6 @@
 using System.Numerics;
+using ReconEngine.InputSystem;
+using ReconEngine.UISystem.UIGrid;
 using ReconEngine.WorldSystem;
 
 namespace ReconEngine.UISystem;
@@ -15,6 +17,8 @@ public abstract class GuiContainer: ReconEntity
             _displayOrder = value;
         }
     }
+
+    public GuiGrid2D ContainerGrid;
 
     private int _displayOrder = 0;
 
@@ -38,11 +42,16 @@ public abstract class GuiContainer: ReconEntity
     public override void Ready()
     {
         base.Ready();
+        
+        ContainerGrid = new(ReconCore.Renderer.GetScreenSize(), 128);
         ParentChanged += (sender, oldParent) =>
         {
             oldParent?.CurrentWorld?.WorldGuiRegistry.RemoveContainer(this);
             CurrentWorld?.WorldGuiRegistry.RegisterContainer(this);
         };
+
+        /// HANDLES UI ELEMENT HOVER ///
+        ReconInputSystem.MouseHandler.MouseMoved += (sender, delta) => ContainerGrid.HoverAt(ReconInputSystem.MouseHandler.GetMousePosition());
         UpdateChildrenOrder();
     }
 

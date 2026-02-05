@@ -11,17 +11,11 @@ public class ReconWorld
     public string WorldName { get; set; }
     public float TimeScale = 1.0f;
     public GuiContainerRegistry WorldGuiRegistry = new();
-    public GuiGrid2D WorldGuiGrid;
-    public ReconInputSystem WorldInputSystem = new();
 
     public ReconWorld(IRenderer renderer, string name = "ReconWorld")
     {
         WorldName = name;
-        WorldGuiGrid = new(renderer.GetScreenSize(), 128);
         Root = new WorldRootEntity(this) { Name = name };
-
-        /// HANDLES UI ELEMENT HOVER ///
-        WorldInputSystem.MouseHandler.MouseMoved += (sender, delta) => WorldGuiGrid.HoverAt(WorldInputSystem.MouseHandler.GetMousePosition());
     }
 
     public void Render(float deltaTime) => RenderRecursive(Root, deltaTime);

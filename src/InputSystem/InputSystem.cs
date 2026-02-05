@@ -1,10 +1,10 @@
 namespace ReconEngine.InputSystem;
 
-public class ReconInputSystem
+public static class ReconInputSystem
 {
-    public IMouseHandler MouseHandler = new RaylibMouseHandler();
+    public static readonly IMouseHandler MouseHandler = new RaylibMouseHandler();
 
-    public void UpdateAll()
+    public static void UpdateAll()
     {
         MouseHandler.Update();
     }
