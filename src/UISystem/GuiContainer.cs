@@ -38,6 +38,11 @@ public abstract class GuiContainer: ReconEntity
     public override void Ready()
     {
         base.Ready();
+        ParentChanged += (sender, oldParent) =>
+        {
+            oldParent?.CurrentWorld?.WorldGuiRegistry.RemoveContainer(this);
+            CurrentWorld?.WorldGuiRegistry.RegisterContainer(this);
+        };
         UpdateChildrenOrder();
     }
 

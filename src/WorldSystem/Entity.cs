@@ -63,6 +63,10 @@ public enum CacheResetDirection
 
 public class ReconEntity: IUpdatable
 {
+    public event EventHandler<ReconEntity?>? ParentChanged;
+    public event EventHandler<ReconEntity>? ChildAdded;
+    public event EventHandler<ReconEntity>? ChildRemoved;
+
     public readonly uint EntityId;
     public ReconEntity? Parent
     {
@@ -88,6 +92,7 @@ public class ReconEntity: IUpdatable
             }
             ResetCache(CacheResetDirection.Both);
             prevParent?.ResetCache(CacheResetDirection.Both);
+            ParentChanged?.Invoke(this, prevParent);
         }
     }
     public ReconWorld? CurrentWorld { get => _currentWorld; }
@@ -152,12 +157,16 @@ public class ReconEntity: IUpdatable
     public virtual void AddChild(ReconEntity entity)
     {
         uint lastid = hierarchyData.ChildrenExit;
+
         if (hierarchyData.ChildrenEntry == 0) hierarchyData.ChildrenEntry = entity.EntityId;
         if (lastid != 0) ReconEntityRegistry.GetEntity(lastid)?.hierarchyData.SiblingAfter = entity.EntityId;
+
         hierarchyData.ChildrenExit = entity.EntityId;
         entity.hierarchyData.ParentId = EntityId;
         entity.hierarchyData.SiblingBefore = lastid;
         entity.hierarchyData.SiblingAfter = 0;
+
+        ChildAdded?.Invoke(this, entity);
     }
     public virtual void RemoveChild(ReconEntity entity)
     {
@@ -175,6 +184,8 @@ public class ReconEntity: IUpdatable
         entity.hierarchyData.ParentId = 0;
         entity.hierarchyData.SiblingAfter = 0;
         entity.hierarchyData.SiblingBefore = 0;
+
+        ChildRemoved?.Invoke(this, entity);
     }
     public virtual void Destroy()
     {
