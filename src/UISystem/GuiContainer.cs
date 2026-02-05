@@ -56,6 +56,8 @@ public abstract class GuiContainer: ReconEntity
             GuiObject? hovered = ContainerGrid.HoverAt(ReconInputSystem.MouseHandler.GetMousePosition());
             hovered?.IMove(ReconInputSystem.MouseHandler.GetMouseMovement());
         };
+
+        IGuiButton? lastPressed = null;
         ReconInputSystem.MouseHandler.MouseDown += (sender, args) =>
         {
             Vector2 pos = args.Position;
@@ -67,20 +69,17 @@ public abstract class GuiContainer: ReconEntity
             GuiObject? obj = cell.GetObjectAt(pos);
             if (obj == null) return;
             
-            if (obj is IGuiButton btn) btn.OnPointerPress(btnid);
+            if (obj is IGuiButton btn)
+            {
+                btn.OnPointerPress(btnid);
+                lastPressed = btn;
+            }
         };
         ReconInputSystem.MouseHandler.MouseUp += (sender, args) =>
         {
-            Vector2 pos = args.Position;
             int btnid = args.Button;
-            
-            GridCell? cell = ContainerGrid.GetCellAt(pos.X, pos.Y);
-            if (cell == null) return;
-
-            GuiObject? obj = cell.GetObjectAt(pos);
-            if (obj == null) return;
-            
-            if (obj is IGuiButton btn) btn.OnPointerRelease(btnid);
+            lastPressed?.OnPointerRelease(btnid);
+            lastPressed = null;
         };
 
         UpdateChildrenOrder();
