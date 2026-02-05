@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest 
+    runs-on: docker
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
