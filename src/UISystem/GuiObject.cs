@@ -20,7 +20,6 @@ public enum GuiMouseState
 {
     None,     // not hovered / clicked
     Hovered,  // mouse is hovering over
-    Pressed,  // mouse click (only on buttons)
 }
 
 public abstract class GuiObject : ReconEntity
@@ -83,6 +82,7 @@ public abstract class GuiObject : ReconEntity
     public OOBB2 GlobalBounds { get; private set; }
     public GuiMouseState MouseState { get; protected set; }
     public GuiContainer? AssignedContainer { get; protected set; }
+    public bool Active => Interactable && Visible;
 
     public event MouseEvent? OnMouseEnter;
     public event MouseEvent? OnMouseLeave;

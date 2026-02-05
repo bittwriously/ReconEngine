@@ -5,51 +5,45 @@ namespace ReconEngine.InputSystem;
 
 public class RaylibMouseHandler : IMouseHandler
 {
+    private static readonly MouseButton[] ButtonsToTrack = 
+    [ 
+        MouseButton.Left, 
+        MouseButton.Right, 
+        MouseButton.Middle,
+        MouseButton.Side,
+        MouseButton.Extra
+    ];
+    private readonly Dictionary<MouseButton, bool> _buttonStates = new();
+    public event EventHandler<Vector2>? MouseMoved;
+    public event EventHandler<float>? MouseScroll;
+    public event EventHandler<MouseButtonEventArgs>? MouseDown;
+    public event EventHandler<MouseButtonEventArgs>? MouseUp;
+    public RaylibMouseHandler()
+    {
+        foreach (var btn in ButtonsToTrack) _buttonStates[btn] = false;
+    }
     public Vector2 GetMousePosition() => Raylib.GetMousePosition();
     public Vector2 GetMouseMovement() => Raylib.GetMouseDelta();
-
-    public bool IsMouse1Down() => Raylib.IsMouseButtonDown(MouseButton.Left);
-    public bool IsMouse2Down() => Raylib.IsMouseButtonDown(MouseButton.Right);
-    public bool IsMouse3Down() => Raylib.IsMouseButtonDown(MouseButton.Middle);
-
-    public event EventHandler<Vector2>? MouseMoved;
-    
-    public event EventHandler<float>? MouseScroll;
-    
-    public event EventHandler<Vector2>? Mouse1Down;
-    public event EventHandler<Vector2>? Mouse2Down;
-    public event EventHandler<Vector2>? Mouse3Down;
-    public event EventHandler<Vector2>? Mouse1Up;
-    public event EventHandler<Vector2>? Mouse2Up;
-    public event EventHandler<Vector2>? Mouse3Up;
-
-    private bool _wasM1Down = false;
-    private bool _wasM2Down = false;
-    private bool _wasM3Down = false;
-
+    public bool IsMouseDown(int button) => Raylib.IsMouseButtonDown((MouseButton)button);
     public void Update()
     {
-        bool m1Down = Raylib.IsMouseButtonDown(MouseButton.Left);
-        bool m2Down = Raylib.IsMouseButtonDown(MouseButton.Right);
-        bool m3Down = Raylib.IsMouseButtonDown(MouseButton.Middle);
-
         Vector2 mPos = Raylib.GetMousePosition();
-
-        if (_wasM1Down && !m1Down) Mouse1Up?.Invoke(this, mPos);
-        else if (!_wasM1Down && m1Down) Mouse1Down?.Invoke(this, mPos);
-        _wasM1Down = m1Down;
-
-        if (_wasM2Down && !m2Down) Mouse2Up?.Invoke(this, mPos);
-        else if (!_wasM2Down && m2Down) Mouse2Down?.Invoke(this, mPos);
-        _wasM2Down = m2Down;
-
-        if (_wasM3Down && !m3Down) Mouse3Up?.Invoke(this, mPos);
-        else if (!_wasM3Down && m3Down) Mouse3Down?.Invoke(this, mPos);
-        _wasM3Down = m3Down;
-
+        foreach (var btn in ButtonsToTrack)
+        {
+            bool isCurrentlyDown = Raylib.IsMouseButtonDown(btn);
+            bool wasDown = _buttonStates[btn];
+            if (isCurrentlyDown && !wasDown)
+            {
+                MouseDown?.Invoke(this, new ((int)btn + 1, mPos));
+            }
+            else if (!isCurrentlyDown && wasDown)
+            {
+                MouseUp?.Invoke(this, new ((int)btn + 1, mPos));
+            }
+            _buttonStates[btn] = isCurrentlyDown;
+        }
         Vector2 mDelta = Raylib.GetMouseDelta();
-        if (mDelta != Vector2.Zero) MouseMoved?.Invoke(this, mDelta);
-        
+        if (mDelta != Vector2.Zero) MouseMoved?.Invoke(this, mPos);
         float wheelDelta = Raylib.GetMouseWheelMove();
         if (wheelDelta != 0) MouseScroll?.Invoke(this, wheelDelta);
     }

@@ -50,12 +50,39 @@ public abstract class GuiContainer: ReconEntity
             CurrentWorld?.WorldGuiRegistry.RegisterContainer(this);
         };
 
-        /// HANDLES UI ELEMENT HOVER ///
+        /// HANDLES UI ELEMENT INPUTS ///
         ReconInputSystem.MouseHandler.MouseMoved += (sender, delta) =>
         {
             GuiObject? hovered = ContainerGrid.HoverAt(ReconInputSystem.MouseHandler.GetMousePosition());
             hovered?.IMove(ReconInputSystem.MouseHandler.GetMouseMovement());
         };
+        ReconInputSystem.MouseHandler.MouseDown += (sender, args) =>
+        {
+            Vector2 pos = args.Position;
+            int btnid = args.Button;
+            
+            GridCell? cell = ContainerGrid.GetCellAt(pos.X, pos.Y);
+            if (cell == null) return;
+
+            GuiObject? obj = cell.GetObjectAt(pos);
+            if (obj == null) return;
+            
+            if (obj is IGuiButton btn) btn.OnPointerPress(btnid);
+        };
+        ReconInputSystem.MouseHandler.MouseUp += (sender, args) =>
+        {
+            Vector2 pos = args.Position;
+            int btnid = args.Button;
+            
+            GridCell? cell = ContainerGrid.GetCellAt(pos.X, pos.Y);
+            if (cell == null) return;
+
+            GuiObject? obj = cell.GetObjectAt(pos);
+            if (obj == null) return;
+            
+            if (obj is IGuiButton btn) btn.OnPointerRelease(btnid);
+        };
+
         UpdateChildrenOrder();
     }
 

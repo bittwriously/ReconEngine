@@ -42,7 +42,7 @@ public class GridCell(GuiGrid2D parent, int x, int y)
 
     public GuiObject? GetObjectAt(Vector2 position)
     {
-        foreach (GuiObject obj in _sortedObjects) if (obj.Interactable && obj.GlobalBounds.Contains(position)) return obj;
+        foreach (GuiObject obj in _sortedObjects) if (obj.Active && obj.GlobalBounds.Contains(position)) return obj;
         return null;
     }
 }
