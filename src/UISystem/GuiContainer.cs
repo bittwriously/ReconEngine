@@ -18,7 +18,7 @@ public abstract class GuiContainer: ReconEntity
         }
     }
 
-    public GuiGrid2D ContainerGrid;
+    public GuiGrid2D ContainerGrid = null!;
 
     private int _displayOrder = 0;
 

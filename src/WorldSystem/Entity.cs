@@ -52,6 +52,8 @@ public struct HierarchyData
     public uint SiblingAfter = 0;
     public uint ChildrenEntry = 0;
     public uint ChildrenExit = 0;
+    public int CachedDepth = -1; // -1 indicates dirty
+    public int CachedSiblingIndex = -1;
 }
 
 public enum CacheResetDirection
@@ -122,9 +124,40 @@ public class ReconEntity: IUpdatable
     }
     public string ClassName
     {
-        get { return this.GetType().Name; }
+        get { return GetType().Name; }
     }
     public bool IsActive = true;
+
+    public int HierarchyDepth
+    {
+        get
+        {
+            if (hierarchyData.CachedDepth != -1) return hierarchyData.CachedDepth;
+            
+            if (Parent == null) hierarchyData.CachedDepth = 0;
+            else hierarchyData.CachedDepth = Parent.HierarchyDepth + 1;
+            
+            return hierarchyData.CachedDepth;
+        }
+    }
+
+    public int SiblingIndex
+    {
+        get
+        {
+            if (hierarchyData.CachedSiblingIndex != -1) return hierarchyData.CachedSiblingIndex;
+
+            if (hierarchyData.SiblingBefore == 0) 
+                hierarchyData.CachedSiblingIndex = 0;
+            else 
+            {
+                var prev = ReconEntityRegistry.GetEntity(hierarchyData.SiblingBefore);
+                hierarchyData.CachedSiblingIndex = (prev != null) ? prev.SiblingIndex + 1 : 0;
+            }
+
+            return hierarchyData.CachedSiblingIndex;
+        }
+    }
 
     private int namehash = 0;
     private string name = "";
@@ -274,6 +307,8 @@ public class ReconEntity: IUpdatable
     public virtual void ResetCache(CacheResetDirection direction)
     {
         _isPathDirty = true;
+        hierarchyData.CachedDepth = -1;
+        hierarchyData.CachedSiblingIndex = -1;
         if (direction == CacheResetDirection.Up || direction == CacheResetDirection.Both)
         {
             _childCache.Clear();
