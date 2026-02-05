@@ -1,4 +1,5 @@
 using Jitter2;
+using ReconEngine.InputSystem;
 using ReconEngine.UISystem;
 using ReconEngine.UISystem.UIGrid;
 
@@ -11,6 +12,7 @@ public class ReconWorld
     public float TimeScale = 1.0f;
     public GuiContainerRegistry WorldGuiRegistry = new();
     public GuiGrid2D WorldGuiGrid;
+    public ReconInputSystem WorldInputSystem = new();
 
     public ReconWorld(IRenderer renderer, string name = "ReconWorld")
     {

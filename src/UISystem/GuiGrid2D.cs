@@ -20,17 +20,17 @@ public class GridCell(GuiGrid2D parent, int x, int y)
     private readonly List<GuiObject> _objects = [];
     private List<GuiObject> _sortedObjects = [];
 
-    private void ResortObjects() => _sortedObjects = [.. _objects.OrderBy(c => c.ZIndex)];
+    private void SortObjects() => _sortedObjects = [.. _objects.OrderBy(c => c.ZIndex)];
 
     public void AddObject(GuiObject obj)
     {
         _objects.Add(obj);
-        ResortObjects();
+        SortObjects();
     }
     public void RemoveObject(GuiObject obj)
     {
         _objects.Remove(obj);
-        ResortObjects();
+        SortObjects();
     }
     public ReadOnlyCollection<GuiObject> GetList() => _sortedObjects.AsReadOnly();
 }

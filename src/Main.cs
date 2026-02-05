@@ -81,6 +81,10 @@ internal static class ReconCore
             Renderer.BeginMode(camera);
             Renderer.EndMode();
             /// 3D ///
+             
+            /// INPUT SYSTEM ///
+            MainWorld.WorldInputSystem.UpdateAll();
+            /// INPUT SYSTEM ///
             
             /// RENDER CALL ///
             MainWorld.Root.RenderStep(deltaTime, Renderer);

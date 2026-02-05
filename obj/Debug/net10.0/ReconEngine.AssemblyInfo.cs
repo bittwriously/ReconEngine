@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ReconEngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f92dd1eef238995f2f3c2ba757009b6e9a27d255")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+52b90f984cfeecb9269fd21780296b6d3630c18f")]
 [assembly: System.Reflection.AssemblyProductAttribute("ReconEngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ReconEngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
