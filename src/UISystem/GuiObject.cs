@@ -1,4 +1,5 @@
 using System.Numerics;
+using ReconEngine.InputSystem;
 using ReconEngine.WorldSystem;
 
 namespace ReconEngine.UISystem;
@@ -204,6 +205,15 @@ public abstract class GuiObject : ReconEntity
         return BackgroundColor.Alpha > 0 ? this : null; // only return self if we are not transparent
     }
 
-    public virtual void IHover() => MouseState = GuiMouseState.Hovered;
-    public virtual void IUnhover() => MouseState = GuiMouseState.None;
+    public virtual void IHover()
+    {
+        MouseState = GuiMouseState.Hovered;
+        OnMouseEnter?.Invoke(ReconInputSystem.MouseHandler.GetMousePosition());
+    }
+    public virtual void IUnhover()
+    {
+        MouseState = GuiMouseState.None;
+        OnMouseLeave?.Invoke(ReconInputSystem.MouseHandler.GetMousePosition());
+    }
+    public virtual void IMove(Vector2 delta) => OnMouseMove?.Invoke(delta);
 }

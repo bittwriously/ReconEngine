@@ -51,7 +51,11 @@ public abstract class GuiContainer: ReconEntity
         };
 
         /// HANDLES UI ELEMENT HOVER ///
-        ReconInputSystem.MouseHandler.MouseMoved += (sender, delta) => ContainerGrid.HoverAt(ReconInputSystem.MouseHandler.GetMousePosition());
+        ReconInputSystem.MouseHandler.MouseMoved += (sender, delta) =>
+        {
+            GuiObject? hovered = ContainerGrid.HoverAt(ReconInputSystem.MouseHandler.GetMousePosition());
+            hovered?.IMove(ReconInputSystem.MouseHandler.GetMouseMovement());
+        };
         UpdateChildrenOrder();
     }
 
