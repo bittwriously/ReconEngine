@@ -21,17 +21,24 @@ public class GridCell(GuiGrid2D parent, int x, int y)
     private readonly List<GuiObject> _objects = [];
     private List<GuiObject> _sortedObjects = [];
 
-    private void SortObjects() => _sortedObjects = [.. _objects.OrderBy(c => c.ZIndex)];
+    private void SortObjects()
+    {
+        // OrderByDescending doesnt work well together with the draw order so we do this
+        _sortedObjects = [.. _objects.OrderBy(c => c.ZIndex)];
+        _sortedObjects.Reverse();
+    }
 
     public void AddObject(GuiObject obj)
     {
         _objects.Add(obj);
         SortObjects();
+        Parent.HoverAt(Parent.LastHoveredAt);
     }
     public void RemoveObject(GuiObject obj)
     {
         _objects.Remove(obj);
         SortObjects();
+        Parent.HoverAt(Parent.LastHoveredAt);
     }
     public ReadOnlyCollection<GuiObject> GetList() => _sortedObjects.AsReadOnly();
 

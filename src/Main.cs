@@ -72,6 +72,8 @@ internal static class ReconCore
                 physicsAccumulator -= physicsFrametime;
                 MainWorld.Root.PhysicsStep((float)physicsFrametime);
                 fpslabel.Text = $"FPS: {Math.Round(1/deltaTime)}\nTPS: {Math.Floor(1/physicsFrametime)}";
+                
+                testButton1.Position += new Vector4(0, 0, 0, 1);
             }
             /// PHYSICS ///
 
