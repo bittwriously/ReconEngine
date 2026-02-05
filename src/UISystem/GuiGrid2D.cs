@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Numerics;
 
 namespace ReconEngine.UISystem.UIGrid;
@@ -17,10 +18,21 @@ public class GridCell(GuiGrid2D parent, int x, int y)
     public readonly Vector2 MaxBounds = new Vector2(x+1, y+1) * parent.GridSize;
 
     private readonly List<GuiObject> _objects = [];
+    private List<GuiObject> _sortedObjects = [];
 
-    public void AddObject(GuiObject obj) => _objects.Add(obj);
-    public void RemoveObject(GuiObject obj) => _objects.Remove(obj);
-    public ImmutableList<GuiObject> GetList() => [.. _objects];
+    private void ResortObjects() => _sortedObjects = [.. _objects.OrderBy(c => c.ZIndex)];
+
+    public void AddObject(GuiObject obj)
+    {
+        _objects.Add(obj);
+        ResortObjects();
+    }
+    public void RemoveObject(GuiObject obj)
+    {
+        _objects.Remove(obj);
+        ResortObjects();
+    }
+    public ReadOnlyCollection<GuiObject> GetList() => _sortedObjects.AsReadOnly();
 }
 
 public class GuiGrid2D
@@ -36,7 +48,7 @@ public class GuiGrid2D
     public GuiGrid2D(Vector2 screenSize, int gridSize = 128)
     {
         GridSize = gridSize;
-        _invGridSize = 1 / gridSize;
+        _invGridSize = 1.0f / gridSize;
         _screenSize = screenSize;
 
         RegenerateGridBuffer(screenSize);        
@@ -59,9 +71,9 @@ public class GuiGrid2D
                 _gridCells.Remove(key);
             }
         }
-        for (int x = 0; x <= newXCount; x++)
+        for (int x = 0; x < newXCount; x++)
         {
-            for (int y = 0; y <= newYCount; y++)
+            for (int y = 0; y < newYCount; y++)
             {
                 long key = GetKeyOf(x, y);
                 if (!_gridCells.ContainsKey(key))
@@ -77,9 +89,9 @@ public class GuiGrid2D
     {
         int xGridCount = (int)MathF.Ceiling(screenSize.X * _invGridSize);
         int yGridCount = (int)MathF.Ceiling(screenSize.Y * _invGridSize);
-        for (int x = 0; x <= xGridCount; x++)
+        for (int x = 0; x < xGridCount; x++)
         {
-            for (int y = 0; y <= yGridCount; y++)
+            for (int y = 0; y < yGridCount; y++)
             {
                 GridCell cell = new(this, x, y);
                 _gridCells[cell.Key] = cell;
@@ -87,15 +99,14 @@ public class GuiGrid2D
         }
     }
 
-    public long GetKeyOf(Vector2 vector) => GetKeyOf(vector.X, vector.Y);
-    public long GetKeyOf(float x, float y)
+    public long GetKeyOf(Vector2 vector) => GetKeyOf((int)vector.X, (int)vector.Y);
+    public long GetKeyOf(int x, int y)
     {
-        int floorX = (int)MathF.Floor(x * _invGridSize);
-        int floorY = (int)MathF.Floor(y * _invGridSize);
-        return floorX | (floorY << 32);
+        return (uint)x | ((long)(uint)y << 32);
     }
-    public int ExtractX(long key) { return (int)(key & 0xFFFFFFFF); }
-    public int ExtractY(long key) { return (int)((key >> 32) & 0xFFFFFFFF); }
+
+    public int ExtractX(long key) => (int)(uint)(key & 0xFFFFFFFF);
+    public int ExtractY(long key) => (int)(uint)((key >> 32) & 0xFFFFFFFF);
 
     private (Vector2 min, Vector2 max) GetAABB(GuiObject obj) 
     {

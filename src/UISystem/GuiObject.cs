@@ -127,6 +127,8 @@ public abstract class GuiObject : ReconEntity
         _lastScreenSize = screenSize;
         _transformdirty = false;
 
+        CurrentWorld?.WorldGuiGrid.UpdateObject(this);
+
         foreach (ReconEntity entity in Children) if (entity is GuiObject obj) obj.UpdateTransform(screenSize);
     }
 
@@ -154,6 +156,11 @@ public abstract class GuiObject : ReconEntity
     {
         base.Ready();
         UpdateChildrenOrder();
+        ParentChanged += (sender, oldParent) =>
+        {
+            oldParent?.CurrentWorld?.WorldGuiGrid.UnregisterObject(this);
+            CurrentWorld?.WorldGuiGrid.RegisterObject(this);
+        };
     }
 
     public override void AddChild(ReconEntity entity)
