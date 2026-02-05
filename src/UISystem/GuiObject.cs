@@ -15,6 +15,13 @@ public struct GuiTransformCache
     public Vector2 ScreenSize;
 }
 
+public enum GuiMouseState
+{
+    None,     // not hovered / clicked
+    Hovered,  // mouse is hovering over
+    Pressed,  // mouse click (only on buttons)
+}
+
 public abstract class GuiObject : ReconEntity
 {
     public bool Interactable = true;
@@ -73,6 +80,11 @@ public abstract class GuiObject : ReconEntity
     }
     public Coords2 Transform { get; private set; }
     public OOBB2 GlobalBounds { get; private set; }
+    public GuiMouseState MouseState { get; protected set; }
+
+    public event MouseEvent? OnMouseEnter;
+    public event MouseEvent? OnMouseLeave;
+    public event MouseEvent? OnMouseMove;
 
     public Color4 BackgroundColor = new();
 
@@ -185,4 +197,7 @@ public abstract class GuiObject : ReconEntity
         }
         return BackgroundColor.Alpha > 0 ? this : null; // only return self if we are not transparent
     }
+
+    public virtual void IHover() => MouseState = GuiMouseState.Hovered;
+    public virtual void IUnhover() => MouseState = GuiMouseState.None;
 }

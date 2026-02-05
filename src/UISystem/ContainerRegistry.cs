@@ -25,22 +25,22 @@ public class GuiContainerRegistry {
         foreach (GuiContainer gui in orderedContainers) if (gui.Enabled) gui.DrawElements(renderer);
     }
 
-    private IGuiButton? lastHovered = null;
+    private GuiObject? lastHovered = null;
     public void ProcessMouse(IRenderer renderer)
     {
         foreach (GuiContainer gui in orderedContainers)
         {
             if (!gui.Enabled) continue;
             GuiObject? obj = gui.GetElementAt(renderer.GetMousePosition());
-            if (obj != null && obj is IGuiButton btn && btn != lastHovered)
+            if (obj != null && obj != lastHovered)
             {
-                lastHovered?.ILeave();
-                btn.IHover();
-                lastHovered = btn;
+                lastHovered?.IUnhover();
+                obj.IHover();
+                lastHovered = obj;
                 return;
             }
         }
-        lastHovered?.ILeave();
+        lastHovered?.IUnhover();
         lastHovered = null;
     }
 }

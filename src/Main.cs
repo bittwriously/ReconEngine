@@ -8,7 +8,7 @@ namespace ReconEngine;
 internal static class ReconCore
 {
     public static IRenderer Renderer = new RenderingEngines.RaylibRenderer();
-    public static ReconWorld MainWorld = new(Renderer, "MainWorld");
+    public static ReconWorld MainWorld = null!;
 
     [STAThread]
     public static void Main()
@@ -16,6 +16,8 @@ internal static class ReconCore
         ReconCamera3D camera = new(new Vector3(5.0f, 0.0f, 0.0f), Vector3.Zero);
 
         Renderer.InitWindow(800, 600, "ReconEngine");
+
+        MainWorld = new(Renderer, "MainWorld");
 
         double physicsAccumulator = 0.0;
         const double physicsFrametime = 1.0 / 20.0;

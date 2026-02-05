@@ -13,6 +13,7 @@ public class GridCell(GuiGrid2D parent, int x, int y)
     public readonly int X = x;
     public readonly int Y = y;
     public readonly long Key = parent.GetKeyOf(x, y);
+    public readonly GuiGrid2D Parent = parent;
 
     public readonly Vector2 MinBounds = new Vector2(x, y) * parent.GridSize;
     public readonly Vector2 MaxBounds = new Vector2(x+1, y+1) * parent.GridSize;
@@ -33,6 +34,12 @@ public class GridCell(GuiGrid2D parent, int x, int y)
         SortObjects();
     }
     public ReadOnlyCollection<GuiObject> GetList() => _sortedObjects.AsReadOnly();
+
+    public GuiObject? GetObjectAt(Vector2 position)
+    {
+        foreach (GuiObject obj in _sortedObjects) if (obj.Interactable && obj.GlobalBounds.Contains(position)) return obj;
+        return null;
+    }
 }
 
 public class GuiGrid2D
@@ -45,13 +52,42 @@ public class GuiGrid2D
 
     private Dictionary<uint, List<long>> _registeredCells = [];
 
+    public GridCell? LastHoveredCell { get; private set; } = null;
+    public Vector2 LastHoveredAt { get; private set; } = Vector2.Zero;
+
+    private GuiObject? _lastHoveredObject = null;
+
     public GuiGrid2D(Vector2 screenSize, int gridSize = 128)
     {
         GridSize = gridSize;
         _invGridSize = 1.0f / gridSize;
         _screenSize = screenSize;
 
-        RegenerateGridBuffer(screenSize);        
+        RegenerateGridBuffer(screenSize);
+    }
+
+    public GridCell? GetCellAt(float x, float y)
+    {
+        long key = GetKeyOf((int)MathF.Floor(x * _invGridSize), (int)MathF.Floor(y * _invGridSize));
+        _gridCells.TryGetValue(key, out GridCell? cell);
+        return cell;
+    }
+
+    public GuiObject? HoverAt(Vector2 cursorPos)
+    {
+        GridCell? cell = GetCellAt(cursorPos.X, cursorPos.Y);
+        LastHoveredAt = cursorPos;
+        LastHoveredCell = cell;
+        if (cell != null)
+        {
+            GuiObject? objectAt = cell.GetObjectAt(cursorPos);
+            if (_lastHoveredObject != objectAt) _lastHoveredObject?.IUnhover();
+            objectAt?.IHover();
+            _lastHoveredObject = objectAt;
+            return objectAt;
+        }
+        _lastHoveredObject?.IUnhover();
+        return null;
     }
 
     public void ResizeGridBuffer(Vector2 screenSize)
@@ -87,6 +123,8 @@ public class GuiGrid2D
 
     public void RegenerateGridBuffer(Vector2 screenSize)
     {
+        _gridCells = [];
+        _registeredCells = [];
         int xGridCount = (int)MathF.Ceiling(screenSize.X * _invGridSize);
         int yGridCount = (int)MathF.Ceiling(screenSize.Y * _invGridSize);
         for (int x = 0; x < xGridCount; x++)

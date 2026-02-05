@@ -7,16 +7,14 @@ public class TextButton: TextLabel, IGuiButton
     public bool Modal { get; set; } = false;
     public bool IsDown { get; private set; } = false;
 
-    public event MouseEvent? OnMouseEnter;
-    public event MouseEvent? OnMouseLeave;
-    public event MouseEvent? OnMouseMove;
     public event MouseEvent? OnMouse1Down;
     public event MouseEvent? OnMouse2Down;
     public event MouseEvent? OnMouse1Up;
     public event MouseEvent? OnMouse2Up;
 
-    public void IHover() 
+    public override void IHover() 
     {
+        base.IHover();
         if (Interactable && AutoBackgroundColor && Pressable)
         {
             Color4 targetColor = new(
@@ -29,5 +27,9 @@ public class TextButton: TextLabel, IGuiButton
         }
         
     }
-    public void ILeave() => _overwriteBgColor = null;
+    public override void IUnhover()
+    {
+        base.IUnhover();
+        _overwriteBgColor = null;
+    }
 }

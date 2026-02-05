@@ -19,6 +19,9 @@ public class ReconWorld
         WorldName = name;
         WorldGuiGrid = new(renderer.GetScreenSize(), 128);
         Root = new WorldRootEntity(this) { Name = name };
+
+        /// HANDLES UI ELEMENT HOVER ///
+        WorldInputSystem.MouseHandler.MouseMoved += (sender, delta) => WorldGuiGrid.HoverAt(WorldInputSystem.MouseHandler.GetMousePosition());
     }
 
     public void Render(float deltaTime) => RenderRecursive(Root, deltaTime);

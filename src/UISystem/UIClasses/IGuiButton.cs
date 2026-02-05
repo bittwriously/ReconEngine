@@ -10,13 +10,7 @@ public interface IGuiButton
     bool Pressable { get; set; }
     bool Modal { get; set; }
     bool IsDown { get; }
-
-    void IHover();
-    void ILeave();
-
-    event MouseEvent OnMouseEnter;
-    event MouseEvent OnMouseLeave;
-    event MouseEvent OnMouseMove;
+    
     event MouseEvent OnMouse1Down;
     event MouseEvent OnMouse2Down;
     event MouseEvent OnMouse1Up;
