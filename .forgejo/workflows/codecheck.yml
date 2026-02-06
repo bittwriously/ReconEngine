@@ -19,6 +19,6 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
       - name: Check formatting
-        run: dotnet format --verify-no-changes
+        run: dotnet format ReconEngine.sln --verify-no-changes
       - name: Build with analyzers
         run: dotnet build --no-restore /p:TreatWarningsAsErrors=true
