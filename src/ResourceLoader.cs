@@ -10,7 +10,7 @@ public enum ResourceAssetType
 
 public static class DynamicResouceLoader
 {
-    private static Dictionary<string, uint> _resourceList = [];
+    private static readonly Dictionary<string, uint> _resourceList = [];
 
     public static uint LoadAsset(string path, ResourceAssetType type)
     {

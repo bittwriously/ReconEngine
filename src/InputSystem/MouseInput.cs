@@ -4,18 +4,18 @@ namespace ReconEngine.InputSystem;
 
 public interface IMouseHandler
 {
-    Vector2 GetMousePosition();
-    Vector2 GetMouseMovement();
-    
-    bool IsMouseDown(int button);
+    public Vector2 GetMousePosition();
+    public Vector2 GetMouseMovement();
 
-    event EventHandler<Vector2>? MouseMoved;
-    event EventHandler<float>? MouseScroll;
-    
-    event EventHandler<MouseButtonEventArgs>? MouseDown;
-    event EventHandler<MouseButtonEventArgs>? MouseUp;
+    public bool IsMouseDown(int button);
 
-    void Update();
+    public event EventHandler<Vector2>? MouseMoved;
+    public event EventHandler<float>? MouseScroll;
+
+    public event EventHandler<MouseButtonEventArgs>? MouseDown;
+    public event EventHandler<MouseButtonEventArgs>? MouseUp;
+
+    public void Update();
 }
 
 public record struct MouseButtonEventArgs(int Button, Vector2 Position);

@@ -1,12 +1,13 @@
 
 namespace ReconEngine.UISystem;
 
-public class GuiContainerRegistry {
+public class GuiContainerRegistry
+{
     private readonly List<GuiContainer> registeredContainers = [];
     private List<GuiContainer> orderedContainers = [];
 
     public void UpdateRenderOrder() => orderedContainers = [.. registeredContainers.OfType<GuiContainer>().OrderBy(c => c.DisplayOrder)];
-    
+
     public void RegisterContainer(GuiContainer container)
     {
         if (registeredContainers.Contains(container)) return;

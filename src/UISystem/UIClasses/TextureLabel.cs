@@ -9,7 +9,7 @@ public enum TextureLabelScalingMode
     Crop,
 }
 
-public class TextureLabel: GuiObject
+public class TextureLabel : GuiObject
 {
     public string Image
     {
@@ -21,7 +21,7 @@ public class TextureLabel: GuiObject
             _imageName = value;
         }
     }
-    public Color4 ImageColor = new(1,1,1,1);
+    public Color4 ImageColor = new(1, 1, 1, 1);
     public TextureLabelScalingMode ScalingMode = TextureLabelScalingMode.Stretch;
 
     private string _imageName = "";

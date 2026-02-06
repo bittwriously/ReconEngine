@@ -24,7 +24,7 @@ public class ReconWorld
     private void RenderRecursive(ReconEntity entity, float deltaTime)
     {
         if (!entity.IsActive) return;
-        if (entity is IUpdatable updatable) 
+        if (entity is IUpdatable updatable)
             updatable.RenderStep(deltaTime);
         foreach (var child in entity.Children)
         {
@@ -34,7 +34,7 @@ public class ReconWorld
     private void PhysicsRecursive(ReconEntity entity, float deltaTime)
     {
         if (!entity.IsActive) return;
-        if (entity is IUpdatable updatable) 
+        if (entity is IUpdatable updatable)
             updatable.RenderStep(deltaTime);
         foreach (var child in entity.Children)
         {
@@ -44,7 +44,7 @@ public class ReconWorld
 
     public void Clear()
     {
-        Root.Destroy(); 
+        Root.Destroy();
         Root = new WorldRootEntity(this) { Name = WorldName };
     }
 }

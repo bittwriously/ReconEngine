@@ -2,7 +2,7 @@ using ReconEngine.InputSystem;
 
 namespace ReconEngine.UISystem;
 
-public class TextButton: TextLabel, IGuiButton
+public class TextButton : TextLabel, IGuiButton
 {
     public bool AutoBackgroundColor { get; set; } = true;
     public bool Pressable { get; set; } = true;
@@ -19,14 +19,14 @@ public class TextButton: TextLabel, IGuiButton
 
     public new bool Active => Interactable && Pressable && Visible;
 
-    public override void IHover() 
+    public override void IHover()
     {
         base.IHover();
         if (Active && AutoBackgroundColor && !IsDown)
         {
             _overwriteBgColor = _hoverColor;
         }
-        
+
     }
     public override void IUnhover()
     {
@@ -46,7 +46,7 @@ public class TextButton: TextLabel, IGuiButton
         ReconMath.OffsetMidWay(BackgroundColor.Blue, .35f),
         BackgroundColor.Alpha
     );
-            
+
 
     public void OnPointerPress(int buttonIndex)
     {

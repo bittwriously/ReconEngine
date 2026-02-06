@@ -177,7 +177,7 @@ public abstract class GuiObject : ReconEntity
             if (Parent is GuiContainer container) AssignedContainer = container;
             else if (Parent is GuiObject obj) AssignedContainer = obj.AssignedContainer;
             else AssignedContainer = null;
-            
+
             AssignedContainer?.ContainerGrid.RegisterObject(this);
         };
     }

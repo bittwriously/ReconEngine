@@ -5,7 +5,7 @@ using ReconEngine.WorldSystem;
 
 namespace ReconEngine.UISystem;
 
-public abstract class GuiContainer: ReconEntity
+public abstract class GuiContainer : ReconEntity
 {
     public bool Enabled { get; set; } = true;
     public Vector2 ScreenInsets { get; set; } = Vector2.Zero;
@@ -42,7 +42,7 @@ public abstract class GuiContainer: ReconEntity
     public override void Ready()
     {
         base.Ready();
-        
+
         ContainerGrid = new(ReconCore.Renderer.GetScreenSize(), 128);
         ParentChanged += (sender, oldParent) =>
         {
@@ -62,13 +62,13 @@ public abstract class GuiContainer: ReconEntity
         {
             Vector2 pos = args.Position;
             int btnid = args.Button;
-            
+
             GridCell? cell = ContainerGrid.GetCellAt(pos.X, pos.Y);
             if (cell == null) return;
 
             GuiObject? obj = cell.GetObjectAt(pos);
             if (obj == null) return;
-            
+
             if (obj is IGuiButton btn)
             {
                 btn.OnPointerPress(btnid);

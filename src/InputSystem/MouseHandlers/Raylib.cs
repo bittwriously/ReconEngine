@@ -5,10 +5,10 @@ namespace ReconEngine.InputSystem;
 
 public class RaylibMouseHandler : IMouseHandler
 {
-    private static readonly MouseButton[] ButtonsToTrack = 
-    [ 
-        MouseButton.Left, 
-        MouseButton.Right, 
+    private static readonly MouseButton[] ButtonsToTrack =
+    [
+        MouseButton.Left,
+        MouseButton.Right,
         MouseButton.Middle,
         MouseButton.Side,
         MouseButton.Extra
@@ -34,11 +34,11 @@ public class RaylibMouseHandler : IMouseHandler
             bool wasDown = _buttonStates[btn];
             if (isCurrentlyDown && !wasDown)
             {
-                MouseDown?.Invoke(this, new ((int)btn + 1, mPos));
+                MouseDown?.Invoke(this, new((int)btn + 1, mPos));
             }
             else if (!isCurrentlyDown && wasDown)
             {
-                MouseUp?.Invoke(this, new ((int)btn + 1, mPos));
+                MouseUp?.Invoke(this, new((int)btn + 1, mPos));
             }
             _buttonStates[btn] = isCurrentlyDown;
         }

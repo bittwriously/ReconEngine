@@ -1,3 +1,3 @@
 namespace ReconEngine.UISystem;
 
-public class Frame: GuiObject {}
+public class Frame : GuiObject { }

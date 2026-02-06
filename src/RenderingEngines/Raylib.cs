@@ -1,7 +1,7 @@
+using System.Collections;
+using System.Numerics;
 using Raylib_cs;
 using ReconEngine.RenderUtils;
-using System.Numerics;
-using System.Collections;
 using ReconEngine.UISystem;
 
 namespace ReconEngine.RenderingEngines;
@@ -13,7 +13,7 @@ public struct RaylibLight
     public Vector3 Position;
     public Vector3 Target;
     public Color Color;
-    
+
     public int EnabledLoc;
     public int TypeLoc;
     public int PosLoc;
@@ -59,7 +59,8 @@ public class RaylibRenderer : IRenderer
         Raylib.SetShaderValue(shader, light.ColorLoc, colorVec, ShaderUniformDataType.Vec4);
     }
 
-    public void InitWindow(int width, int height, string title) {
+    public void InitWindow(int width, int height, string title)
+    {
         Raylib.SetConfigFlags(ConfigFlags.VSyncHint);
 
         Raylib.InitWindow(width, height, title);
@@ -71,7 +72,8 @@ public class RaylibRenderer : IRenderer
         int ambientLoc = Raylib.GetShaderLocation(lightShader, "ambient");
         Raylib.SetShaderValue(lightShader, ambientLoc, new float[] { 0.2f, 0.2f, 0.2f, 1.0f }, ShaderUniformDataType.Vec4);
 
-        sun = new() {
+        sun = new()
+        {
             Enabled = true,
             Type = RaylibLightType.Directional,
             Position = new Vector3(50, 100, 50),
@@ -81,8 +83,9 @@ public class RaylibRenderer : IRenderer
         InitLight(ref sun, lightShader);
     }
     public void CloseWindow() => Raylib.CloseWindow();
-    
-    public void BeginFrame() {
+
+    public void BeginFrame()
+    {
         Raylib.BeginDrawing();
         UpdateLightValues(sun, lightShader);
     }
@@ -119,9 +122,10 @@ public class RaylibRenderer : IRenderer
         if (!meshRegistry.ContainsKey(modelId)) return;
         Model model = meshRegistry[modelId];
         for (int i = 0; i < model.MaterialCount; i++)
-        unsafe {
-            model.Materials[i].Shader = lightShader;
-        }
+            unsafe
+            {
+                model.Materials[i].Shader = lightShader;
+            }
     }
     public void SetTextureSamplingMode(uint textureId, ETextureSamplingMode samplingMode)
     {
@@ -189,7 +193,7 @@ public class RaylibRenderer : IRenderer
         Rectangle source = new();
         switch (scalingMode)
         {
-            case TextureLabelScalingMode.Stretch: 
+            case TextureLabelScalingMode.Stretch:
                 source = new(0, 0, texture.Dimensions);
                 break;
             case TextureLabelScalingMode.Fit:

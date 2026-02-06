@@ -37,7 +37,8 @@ public static class ReconEntityRegistry
     }
     public static void FreeId(uint id)
     {
-        lock (_lock) {
+        lock (_lock)
+        {
             registry.Remove(id);
             freeids.Add(id);
         }
@@ -46,7 +47,7 @@ public static class ReconEntityRegistry
 
 public struct HierarchyData
 {
-    public HierarchyData() {}
+    public HierarchyData() { }
     public uint ParentId = 0; // 0 means no node is here
     public uint SiblingBefore = 0;
     public uint SiblingAfter = 0;
@@ -63,7 +64,7 @@ public enum CacheResetDirection
     Both     // full branch reset
 }
 
-public class ReconEntity: IUpdatable
+public class ReconEntity : IUpdatable
 {
     public event EventHandler<ReconEntity?>? ParentChanged;
     public event EventHandler<ReconEntity>? ChildAdded;
@@ -72,7 +73,7 @@ public class ReconEntity: IUpdatable
     public readonly uint EntityId;
     public ReconEntity? Parent
     {
-        get 
+        get
         {
             if (hierarchyData.ParentId == 0) return null;
             return ReconEntityRegistry.GetEntity(hierarchyData.ParentId);
@@ -133,10 +134,10 @@ public class ReconEntity: IUpdatable
         get
         {
             if (hierarchyData.CachedDepth != -1) return hierarchyData.CachedDepth;
-            
+
             if (Parent == null) hierarchyData.CachedDepth = 0;
             else hierarchyData.CachedDepth = Parent.HierarchyDepth + 1;
-            
+
             return hierarchyData.CachedDepth;
         }
     }
@@ -147,9 +148,9 @@ public class ReconEntity: IUpdatable
         {
             if (hierarchyData.CachedSiblingIndex != -1) return hierarchyData.CachedSiblingIndex;
 
-            if (hierarchyData.SiblingBefore == 0) 
+            if (hierarchyData.SiblingBefore == 0)
                 hierarchyData.CachedSiblingIndex = 0;
-            else 
+            else
             {
                 var prev = ReconEntityRegistry.GetEntity(hierarchyData.SiblingBefore);
                 hierarchyData.CachedSiblingIndex = (prev != null) ? prev.SiblingIndex + 1 : 0;
@@ -206,14 +207,14 @@ public class ReconEntity: IUpdatable
         uint nextid = entity.hierarchyData.SiblingAfter;
         uint previd = entity.hierarchyData.SiblingBefore;
 
-        if (previd != 0) 
+        if (previd != 0)
             ReconEntityRegistry.GetEntity(previd)!.hierarchyData.SiblingAfter = nextid;
         else hierarchyData.ChildrenEntry = nextid;
 
-        if (nextid != 0) 
+        if (nextid != 0)
             ReconEntityRegistry.GetEntity(nextid)!.hierarchyData.SiblingBefore = previd;
         else hierarchyData.ChildrenExit = previd;
-        
+
         entity.hierarchyData.ParentId = 0;
         entity.hierarchyData.SiblingAfter = 0;
         entity.hierarchyData.SiblingBefore = 0;
@@ -333,8 +334,8 @@ public class ReconEntity: IUpdatable
     {
         foreach (ReconEntity entity in Children) entity.PhysicsStep(deltaTime);
     }
-    public virtual void Ready() {}
-    
+    public virtual void Ready() { }
+
     public virtual ReconEntity Clone()
     {
         var clone = (ReconEntity)Activator.CreateInstance(this.GetType())!;

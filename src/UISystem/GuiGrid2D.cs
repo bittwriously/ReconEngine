@@ -16,7 +16,7 @@ public class GridCell(GuiGrid2D parent, int x, int y)
     public readonly GuiGrid2D Parent = parent;
 
     public readonly Vector2 MinBounds = new Vector2(x, y) * parent.GridSize;
-    public readonly Vector2 MaxBounds = new Vector2(x+1, y+1) * parent.GridSize;
+    public readonly Vector2 MaxBounds = new Vector2(x + 1, y + 1) * parent.GridSize;
 
     private readonly List<GuiObject> _objects = [];
     private List<GuiObject> _sortedObjects = [];
@@ -52,7 +52,7 @@ public class GuiGrid2D
     public readonly int GridSize;
     private readonly float _invGridSize;
     private Vector2 _screenSize;
-    
+
     private Dictionary<long, GridCell> _gridCells = [];
 
     private Dictionary<uint, List<long>> _registeredCells = [];
@@ -151,11 +151,12 @@ public class GuiGrid2D
     public int ExtractX(long key) => (int)(uint)(key & 0xFFFFFFFF);
     public int ExtractY(long key) => (int)(uint)((key >> 32) & 0xFFFFFFFF);
 
-    private (Vector2 min, Vector2 max) GetAABB(GuiObject obj) 
+    private (Vector2 min, Vector2 max) GetAABB(GuiObject obj)
     {
         Vector2 pos = new(obj.TransformCache.PosX, obj.TransformCache.PosY);
         Vector2 size = new(obj.TransformCache.SizeX, obj.TransformCache.SizeY);
-        if (obj.Rotation == 0) {
+        if (obj.Rotation == 0)
+        {
             return (pos, pos + size);
         }
         Vector2[] corners = [
@@ -169,7 +170,8 @@ public class GuiGrid2D
         float sin = MathF.Sin(rad);
         float minX = float.MaxValue, minY = float.MaxValue;
         float maxX = float.MinValue, maxY = float.MinValue;
-        foreach (var corner in corners) {
+        foreach (var corner in corners)
+        {
             float rotatedX = pos.X + (corner.X * cos - corner.Y * sin);
             float rotatedY = pos.Y + (corner.X * sin + corner.Y * cos);
             minX = MathF.Min(minX, rotatedX);

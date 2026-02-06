@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using ReconEngine.InputSystem;
 using ReconEngine.RenderUtils;
 using ReconEngine.UISystem;
@@ -32,7 +32,7 @@ internal static class ReconCore
         {
             Parent = maingui,
             Text = "FPS",
-            TextColor = new Color4(1,1,1,1),
+            TextColor = new Color4(1, 1, 1, 1),
             BackgroundColor = new Color4(1, .5f, .5f, 1),
             Size = new Vector4(.7f, .5f, 0, 0),
             TextSize = 32,
@@ -72,26 +72,26 @@ internal static class ReconCore
                 // do physics here
                 physicsAccumulator -= physicsFrametime;
                 MainWorld.Root.PhysicsStep((float)physicsFrametime);
-                fpslabel.Text = $"FPS: {Math.Round(1/deltaTime)}\nTPS: {Math.Floor(1/physicsFrametime)}";
-                
+                fpslabel.Text = $"FPS: {Math.Round(1 / deltaTime)}\nTPS: {Math.Floor(1 / physicsFrametime)}";
+
                 testButton1.Position += new Vector4(0, 0, 0, 1);
                 testButton2.Position += new Vector4(0, 0, 0, 2);
             }
             /// PHYSICS ///
 
             Renderer.BeginFrame();
-            
+
             Renderer.ClearBuffer();
 
             /// 3D ///
             Renderer.BeginMode(camera);
             Renderer.EndMode();
             /// 3D ///
-             
+
             /// INPUT SYSTEM ///
             ReconInputSystem.UpdateAll();
             /// INPUT SYSTEM ///
-            
+
             /// RENDER CALL ///
             MainWorld.Root.RenderStep(deltaTime, Renderer);
             /// RENDER CALL ///
