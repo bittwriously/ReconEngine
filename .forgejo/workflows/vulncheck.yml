@@ -10,6 +10,12 @@ jobs:
   security:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Node.js for Actions
+        run: |
+          apt-get update
+          apt-get install -y curl
+          curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+          apt-get install -y nodejs
       - uses: actions/checkout@v3
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
