@@ -12,7 +12,7 @@ public class ReconWorld
     public float TimeScale = 1.0f;
     public GuiContainerRegistry WorldGuiRegistry = new();
 
-    public ReconWorld(IRenderer renderer, string name = "ReconWorld")
+    public ReconWorld(string name = "ReconWorld")
     {
         WorldName = name;
         Root = new WorldRootEntity(this) { Name = name };

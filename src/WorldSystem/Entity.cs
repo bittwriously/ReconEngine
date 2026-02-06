@@ -2,45 +2,45 @@ namespace ReconEngine.WorldSystem;
 
 public static class ReconEntityRegistry
 {
-    private readonly static Dictionary<uint, ReconEntity> registry = [];
-    private static uint idcounter = 0;
-    private static readonly List<uint> freeids = [];
+    private readonly static Dictionary<uint, ReconEntity> _registry = [];
+    private static uint _idcounter = 0;
+    private static readonly List<uint> _freeids = [];
     private static readonly Lock _lock = new();
 
     public static ReconEntity? GetEntity(uint id)
     {
         ReconEntity? entity;
-        lock (_lock) { registry.TryGetValue(id, out entity); }
+        lock (_lock) { _registry.TryGetValue(id, out entity); }
         return entity;
     }
     public static void RegisterEntity(ReconEntity entity)
     {
         lock (_lock)
         {
-            if (registry.ContainsKey(entity.EntityId)) return;
-            registry.Add(entity.EntityId, entity);
+            if (_registry.ContainsKey(entity.EntityId)) return;
+            _registry.Add(entity.EntityId, entity);
         }
     }
     public static uint GetNextId()
     {
         lock (_lock)
         {
-            if (freeids.Count > 0)
+            if (_freeids.Count > 0)
             {
-                int lastIndex = freeids.Count - 1;
-                uint id = freeids[lastIndex];
-                freeids.RemoveAt(lastIndex);
+                int lastIndex = _freeids.Count - 1;
+                uint id = _freeids[lastIndex];
+                _freeids.RemoveAt(lastIndex);
                 return id;
             }
-            return ++idcounter;
+            return ++_idcounter;
         }
     }
     public static void FreeId(uint id)
     {
         lock (_lock)
         {
-            registry.Remove(id);
-            freeids.Add(id);
+            _registry.Remove(id);
+            _freeids.Add(id);
         }
     }
 }
@@ -75,8 +75,8 @@ public class ReconEntity : IUpdatable
     {
         get
         {
-            if (hierarchyData.ParentId == 0) return null;
-            return ReconEntityRegistry.GetEntity(hierarchyData.ParentId);
+            if (_hierarchyData.ParentId == 0) return null;
+            return ReconEntityRegistry.GetEntity(_hierarchyData.ParentId);
         }
         set
         {
@@ -84,12 +84,12 @@ public class ReconEntity : IUpdatable
             prevParent?.RemoveChild(this);
             if (value == null)
             {
-                hierarchyData.ParentId = 0;
+                _hierarchyData.ParentId = 0;
                 _currentWorld = null;
             }
             else
             {
-                hierarchyData.ParentId = value.EntityId;
+                _hierarchyData.ParentId = value.EntityId;
                 value.AddChild(this);
                 _currentWorld = value.CurrentWorld;
             }
@@ -101,11 +101,11 @@ public class ReconEntity : IUpdatable
     public ReconWorld? CurrentWorld { get => _currentWorld; }
     public string Name
     {
-        get { return name; }
+        get { return _name; }
         set
         {
-            name = value;
-            namehash = value.GetHashCode(StringComparison.CurrentCulture);
+            _name = value;
+            _namehash = value.GetHashCode(StringComparison.CurrentCulture);
             ResetCache(CacheResetDirection.Both);
         }
     }
@@ -113,13 +113,13 @@ public class ReconEntity : IUpdatable
     {
         get
         {
-            uint currentId = hierarchyData.ChildrenEntry;
+            uint currentId = _hierarchyData.ChildrenEntry;
             while (currentId != 0)
             {
                 var entity = ReconEntityRegistry.GetEntity(currentId);
                 if (entity == null) yield break;
                 yield return entity;
-                currentId = entity.hierarchyData.SiblingAfter;
+                currentId = entity._hierarchyData.SiblingAfter;
             }
         }
     }
@@ -133,12 +133,12 @@ public class ReconEntity : IUpdatable
     {
         get
         {
-            if (hierarchyData.CachedDepth != -1) return hierarchyData.CachedDepth;
+            if (_hierarchyData.CachedDepth != -1) return _hierarchyData.CachedDepth;
 
-            if (Parent == null) hierarchyData.CachedDepth = 0;
-            else hierarchyData.CachedDepth = Parent.HierarchyDepth + 1;
+            if (Parent == null) _hierarchyData.CachedDepth = 0;
+            else _hierarchyData.CachedDepth = Parent.HierarchyDepth + 1;
 
-            return hierarchyData.CachedDepth;
+            return _hierarchyData.CachedDepth;
         }
     }
 
@@ -146,23 +146,23 @@ public class ReconEntity : IUpdatable
     {
         get
         {
-            if (hierarchyData.CachedSiblingIndex != -1) return hierarchyData.CachedSiblingIndex;
+            if (_hierarchyData.CachedSiblingIndex != -1) return _hierarchyData.CachedSiblingIndex;
 
-            if (hierarchyData.SiblingBefore == 0)
-                hierarchyData.CachedSiblingIndex = 0;
+            if (_hierarchyData.SiblingBefore == 0)
+                _hierarchyData.CachedSiblingIndex = 0;
             else
             {
-                var prev = ReconEntityRegistry.GetEntity(hierarchyData.SiblingBefore);
-                hierarchyData.CachedSiblingIndex = (prev != null) ? prev.SiblingIndex + 1 : 0;
+                var prev = ReconEntityRegistry.GetEntity(_hierarchyData.SiblingBefore);
+                _hierarchyData.CachedSiblingIndex = (prev != null) ? prev.SiblingIndex + 1 : 0;
             }
 
-            return hierarchyData.CachedSiblingIndex;
+            return _hierarchyData.CachedSiblingIndex;
         }
     }
 
-    private int namehash = 0;
-    private string name = "";
-    private HierarchyData hierarchyData = new();
+    private int _namehash = 0;
+    private string _name = "";
+    private HierarchyData _hierarchyData = new();
 
     public ReconEntity()
     {
@@ -190,44 +190,44 @@ public class ReconEntity : IUpdatable
     }
     public virtual void AddChild(ReconEntity entity)
     {
-        uint lastid = hierarchyData.ChildrenExit;
+        uint lastid = _hierarchyData.ChildrenExit;
 
-        if (hierarchyData.ChildrenEntry == 0) hierarchyData.ChildrenEntry = entity.EntityId;
-        if (lastid != 0) ReconEntityRegistry.GetEntity(lastid)?.hierarchyData.SiblingAfter = entity.EntityId;
+        if (_hierarchyData.ChildrenEntry == 0) _hierarchyData.ChildrenEntry = entity.EntityId;
+        if (lastid != 0) ReconEntityRegistry.GetEntity(lastid)?._hierarchyData.SiblingAfter = entity.EntityId;
 
-        hierarchyData.ChildrenExit = entity.EntityId;
-        entity.hierarchyData.ParentId = EntityId;
-        entity.hierarchyData.SiblingBefore = lastid;
-        entity.hierarchyData.SiblingAfter = 0;
+        _hierarchyData.ChildrenExit = entity.EntityId;
+        entity._hierarchyData.ParentId = EntityId;
+        entity._hierarchyData.SiblingBefore = lastid;
+        entity._hierarchyData.SiblingAfter = 0;
 
         ChildAdded?.Invoke(this, entity);
     }
     public virtual void RemoveChild(ReconEntity entity)
     {
-        uint nextid = entity.hierarchyData.SiblingAfter;
-        uint previd = entity.hierarchyData.SiblingBefore;
+        uint nextid = entity._hierarchyData.SiblingAfter;
+        uint previd = entity._hierarchyData.SiblingBefore;
 
         if (previd != 0)
-            ReconEntityRegistry.GetEntity(previd)!.hierarchyData.SiblingAfter = nextid;
-        else hierarchyData.ChildrenEntry = nextid;
+            ReconEntityRegistry.GetEntity(previd)!._hierarchyData.SiblingAfter = nextid;
+        else _hierarchyData.ChildrenEntry = nextid;
 
         if (nextid != 0)
-            ReconEntityRegistry.GetEntity(nextid)!.hierarchyData.SiblingBefore = previd;
-        else hierarchyData.ChildrenExit = previd;
+            ReconEntityRegistry.GetEntity(nextid)!._hierarchyData.SiblingBefore = previd;
+        else _hierarchyData.ChildrenExit = previd;
 
-        entity.hierarchyData.ParentId = 0;
-        entity.hierarchyData.SiblingAfter = 0;
-        entity.hierarchyData.SiblingBefore = 0;
+        entity._hierarchyData.ParentId = 0;
+        entity._hierarchyData.SiblingAfter = 0;
+        entity._hierarchyData.SiblingBefore = 0;
 
         ChildRemoved?.Invoke(this, entity);
     }
     public virtual void Destroy()
     {
-        uint currentId = hierarchyData.ChildrenEntry;
+        uint currentId = _hierarchyData.ChildrenEntry;
         while (currentId != 0)
         {
             var child = ReconEntityRegistry.GetEntity(currentId);
-            uint nextId = child?.hierarchyData.SiblingAfter ?? 0;
+            uint nextId = child?._hierarchyData.SiblingAfter ?? 0;
             child?.Destroy();
             currentId = nextId;
         }
@@ -242,7 +242,7 @@ public class ReconEntity : IUpdatable
         if (cachedEntity != null) return cachedEntity;
         foreach (var child in Children)
         {
-            if (child.namehash == targetHash && child.Name == targetName)
+            if (child._namehash == targetHash && child.Name == targetName)
             {
                 _childCache[targetHash] = child;
                 return child;
@@ -263,7 +263,7 @@ public class ReconEntity : IUpdatable
         ReconEntity? current = Parent;
         while (current != null)
         {
-            if (current.namehash == targetHash && current.Name == targetName)
+            if (current._namehash == targetHash && current.Name == targetName)
             {
                 _ancestorCache[targetHash] = current;
                 return current;
@@ -285,7 +285,7 @@ public class ReconEntity : IUpdatable
     {
         foreach (var child in current.Children)
         {
-            if (child.namehash == hash && child.Name == name)
+            if (child._namehash == hash && child.Name == name)
                 return child;
 
             var found = SearchRecursive(child, name, hash);
@@ -308,8 +308,8 @@ public class ReconEntity : IUpdatable
     public virtual void ResetCache(CacheResetDirection direction)
     {
         _isPathDirty = true;
-        hierarchyData.CachedDepth = -1;
-        hierarchyData.CachedSiblingIndex = -1;
+        _hierarchyData.CachedDepth = -1;
+        _hierarchyData.CachedSiblingIndex = -1;
         if (direction == CacheResetDirection.Up || direction == CacheResetDirection.Both)
         {
             _childCache.Clear();

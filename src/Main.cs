@@ -18,7 +18,7 @@ internal static class ReconCore
 
         Renderer.InitWindow(800, 600, "ReconEngine");
 
-        MainWorld = new(Renderer, "MainWorld");
+        MainWorld = new("MainWorld");
 
         double physicsAccumulator = 0.0;
         const double physicsFrametime = 1.0 / 20.0;

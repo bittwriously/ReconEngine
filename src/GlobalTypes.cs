@@ -6,11 +6,11 @@ namespace ReconEngine;
 public static class ReconMath
 {
     public static float PI = 3.14159265359f;
-    private static readonly float deg2rad = PI / 180;
-    private static readonly float rad2deg = 180 / PI;
+    private static readonly float _deg2rad = PI / 180;
+    private static readonly float _rad2deg = 180 / PI;
 
-    public static float Deg2Rad(float degrees) { return degrees * deg2rad; }
-    public static float Rad2Deg(float radians) { return radians * rad2deg; }
+    public static float Deg2Rad(float degrees) { return degrees * _deg2rad; }
+    public static float Rad2Deg(float radians) { return radians * _rad2deg; }
 
     public static float LerpFloat(float first, float second, float alpha) { return first + (second - first) * alpha; }
     public static float OffsetMidWay(float value, float offset)

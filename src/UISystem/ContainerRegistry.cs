@@ -3,45 +3,45 @@ namespace ReconEngine.UISystem;
 
 public class GuiContainerRegistry
 {
-    private readonly List<GuiContainer> registeredContainers = [];
-    private List<GuiContainer> orderedContainers = [];
+    private readonly List<GuiContainer> _registeredContainers = [];
+    private List<GuiContainer> _orderedContainers = [];
 
-    public void UpdateRenderOrder() => orderedContainers = [.. registeredContainers.OfType<GuiContainer>().OrderBy(c => c.DisplayOrder)];
+    public void UpdateRenderOrder() => _orderedContainers = [.. _registeredContainers.OfType<GuiContainer>().OrderBy(c => c.DisplayOrder)];
 
     public void RegisterContainer(GuiContainer container)
     {
-        if (registeredContainers.Contains(container)) return;
-        registeredContainers.Add(container);
+        if (_registeredContainers.Contains(container)) return;
+        _registeredContainers.Add(container);
         UpdateRenderOrder();
     }
     public void RemoveContainer(GuiContainer container)
     {
-        if (!registeredContainers.Contains(container)) return;
-        registeredContainers.Remove(container);
+        if (!_registeredContainers.Contains(container)) return;
+        _registeredContainers.Remove(container);
         UpdateRenderOrder();
     }
 
     public void DrawContainers(IRenderer renderer)
     {
-        foreach (GuiContainer gui in orderedContainers) if (gui.Enabled) gui.DrawElements(renderer);
+        foreach (GuiContainer gui in _orderedContainers) if (gui.Enabled) gui.DrawElements(renderer);
     }
 
-    private GuiObject? lastHovered = null;
+    private GuiObject? _lastHovered = null;
     public void ProcessMouse(IRenderer renderer)
     {
-        foreach (GuiContainer gui in orderedContainers)
+        foreach (GuiContainer gui in _orderedContainers)
         {
             if (!gui.Enabled) continue;
             GuiObject? obj = gui.GetElementAt(renderer.GetMousePosition());
-            if (obj != null && obj != lastHovered)
+            if (obj != null && obj != _lastHovered)
             {
-                lastHovered?.IUnhover();
+                _lastHovered?.IUnhover();
                 obj.IHover();
-                lastHovered = obj;
+                _lastHovered = obj;
                 return;
             }
         }
-        lastHovered?.IUnhover();
-        lastHovered = null;
+        _lastHovered?.IUnhover();
+        _lastHovered = null;
     }
 }

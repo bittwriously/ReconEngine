@@ -22,16 +22,16 @@ public abstract class GuiContainer : ReconEntity
 
     private int _displayOrder = 0;
 
-    private List<GuiObject> sortedChildren = [];
-    public void UpdateChildrenOrder() => sortedChildren = [.. Children.OfType<GuiObject>().OrderBy(c => c.ZIndex)];
+    private List<GuiObject> _sortedChildren = [];
+    public void UpdateChildrenOrder() => _sortedChildren = [.. Children.OfType<GuiObject>().OrderBy(c => c.ZIndex)];
     public void DrawElements(IRenderer renderer)
     {
-        foreach (GuiObject obj in sortedChildren) obj.DrawSelfAndChildren(renderer);
+        foreach (GuiObject obj in _sortedChildren) obj.DrawSelfAndChildren(renderer);
     }
 
     public GuiObject? GetElementAt(Vector2 point)
     {
-        foreach (GuiObject obj in sortedChildren)
+        foreach (GuiObject obj in _sortedChildren)
         {
             GuiObject? element = obj.GetElementAt(point);
             if (element != null) return element;

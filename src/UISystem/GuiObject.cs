@@ -157,14 +157,14 @@ public abstract class GuiObject : ReconEntity
         );
     }
 
-    private List<GuiObject> sortedChildren = [];
+    private List<GuiObject> _sortedChildren = [];
     public void DrawSelfAndChildren(IRenderer renderer)
     {
         Draw(renderer);
-        foreach (GuiObject obj in sortedChildren) obj.Draw(renderer);
+        foreach (GuiObject obj in _sortedChildren) obj.Draw(renderer);
     }
 
-    private void UpdateChildrenOrder() => sortedChildren = [.. Children.OfType<GuiObject>().OrderBy(c => c.ZIndex)];
+    private void UpdateChildrenOrder() => _sortedChildren = [.. Children.OfType<GuiObject>().OrderBy(c => c.ZIndex)];
 
     public override void Ready()
     {
@@ -197,7 +197,7 @@ public abstract class GuiObject : ReconEntity
     {
         if (!this.GlobalBounds.Contains(point)) return null;
         if (!this.Interactable) return null;
-        foreach (GuiObject entity in sortedChildren)
+        foreach (GuiObject entity in _sortedChildren)
         {
             var hit = entity.GetElementAt(point);
             if (hit != null) return hit;

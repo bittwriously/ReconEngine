@@ -5,7 +5,7 @@ namespace ReconEngine.InputSystem;
 
 public class RaylibMouseHandler : IMouseHandler
 {
-    private static readonly MouseButton[] ButtonsToTrack =
+    private static readonly MouseButton[] _buttonsToTrack =
     [
         MouseButton.Left,
         MouseButton.Right,
@@ -20,7 +20,7 @@ public class RaylibMouseHandler : IMouseHandler
     public event EventHandler<MouseButtonEventArgs>? MouseUp;
     public RaylibMouseHandler()
     {
-        foreach (var btn in ButtonsToTrack) _buttonStates[btn] = false;
+        foreach (var btn in _buttonsToTrack) _buttonStates[btn] = false;
     }
     public Vector2 GetMousePosition() => Raylib.GetMousePosition();
     public Vector2 GetMouseMovement() => Raylib.GetMouseDelta();
@@ -28,7 +28,7 @@ public class RaylibMouseHandler : IMouseHandler
     public void Update()
     {
         Vector2 mPos = Raylib.GetMousePosition();
-        foreach (var btn in ButtonsToTrack)
+        foreach (var btn in _buttonsToTrack)
         {
             bool isCurrentlyDown = Raylib.IsMouseButtonDown(btn);
             bool wasDown = _buttonStates[btn];

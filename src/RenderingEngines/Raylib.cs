@@ -29,14 +29,14 @@ public enum RaylibLightType
 
 public class RaylibRenderer : IRenderer
 {
-    private readonly Dictionary<uint, Model> meshRegistry = [];
-    private uint meshRegistryCounter = 0;
-    private readonly Dictionary<uint, Texture2D> textureRegistry = [];
-    private uint textureRegistryCounter = 0;
-    private readonly Dictionary<uint, Font> fontRegistry = [];
-    private uint fontRegistryCounter = 0;
-    private RaylibLight sun;
-    private Shader lightShader;
+    private readonly Dictionary<uint, Model> _meshRegistry = [];
+    private uint _meshRegistryCounter = 0;
+    private readonly Dictionary<uint, Texture2D> _textureRegistry = [];
+    private uint _textureRegistryCounter = 0;
+    private readonly Dictionary<uint, Font> _fontRegistry = [];
+    private uint _fontRegistryCounter = 0;
+    private RaylibLight _sun;
+    private Shader _lightShader;
 
     public void InitLight(ref RaylibLight light, Shader shader)
     {
@@ -66,13 +66,13 @@ public class RaylibRenderer : IRenderer
         Raylib.InitWindow(width, height, title);
         //Raylib.DisableCursor();
 
-        lightShader = Raylib.LoadShader("assets/shaders/lighting.vs", "assets/shaders/lighting.fs");
-        unsafe { lightShader.Locs[(int)ShaderLocationIndex.VectorView] = Raylib.GetShaderLocation(lightShader, "viewPos"); }
+        _lightShader = Raylib.LoadShader("assets/shaders/lighting.vs", "assets/shaders/lighting.fs");
+        unsafe { _lightShader.Locs[(int)ShaderLocationIndex.VectorView] = Raylib.GetShaderLocation(_lightShader, "viewPos"); }
 
-        int ambientLoc = Raylib.GetShaderLocation(lightShader, "ambient");
-        Raylib.SetShaderValue(lightShader, ambientLoc, new float[] { 0.2f, 0.2f, 0.2f, 1.0f }, ShaderUniformDataType.Vec4);
+        int ambientLoc = Raylib.GetShaderLocation(_lightShader, "ambient");
+        Raylib.SetShaderValue(_lightShader, ambientLoc, new float[] { 0.2f, 0.2f, 0.2f, 1.0f }, ShaderUniformDataType.Vec4);
 
-        sun = new()
+        _sun = new()
         {
             Enabled = true,
             Type = RaylibLightType.Directional,
@@ -80,14 +80,14 @@ public class RaylibRenderer : IRenderer
             Target = Vector3.Zero,
             Color = Color.White
         };
-        InitLight(ref sun, lightShader);
+        InitLight(ref _sun, _lightShader);
     }
     public void CloseWindow() => Raylib.CloseWindow();
 
     public void BeginFrame()
     {
         Raylib.BeginDrawing();
-        UpdateLightValues(sun, lightShader);
+        UpdateLightValues(_sun, _lightShader);
     }
     public void EndFrame() => Raylib.EndDrawing();
 
@@ -96,41 +96,41 @@ public class RaylibRenderer : IRenderer
     public uint RegisterMesh(string filepath)
     {
         Model model = Raylib.LoadModel(filepath);
-        meshRegistryCounter++;
-        meshRegistry.Add(meshRegistryCounter, model);
-        return meshRegistryCounter;
+        _meshRegistryCounter++;
+        _meshRegistry.Add(_meshRegistryCounter, model);
+        return _meshRegistryCounter;
     }
     public uint RegisterTexture(string filepath)
     {
         Texture2D texture = Raylib.LoadTexture(filepath);
         Raylib.SetTextureWrap(texture, TextureWrap.Clamp);
         Raylib.SetTextureFilter(texture, TextureFilter.Trilinear);
-        textureRegistryCounter++;
-        textureRegistry.Add(textureRegistryCounter, texture);
-        return textureRegistryCounter;
+        _textureRegistryCounter++;
+        _textureRegistry.Add(_textureRegistryCounter, texture);
+        return _textureRegistryCounter;
     }
     public uint RegisterFont(string filepath)
     {
         Font font = Raylib.LoadFont(filepath);
-        fontRegistryCounter++;
-        fontRegistry.Add(fontRegistryCounter, font);
-        return fontRegistryCounter;
+        _fontRegistryCounter++;
+        _fontRegistry.Add(_fontRegistryCounter, font);
+        return _fontRegistryCounter;
     }
 
     public void ApplyLightingShader(uint modelId)
     {
-        if (!meshRegistry.ContainsKey(modelId)) return;
-        Model model = meshRegistry[modelId];
+        if (!_meshRegistry.ContainsKey(modelId)) return;
+        Model model = _meshRegistry[modelId];
         for (int i = 0; i < model.MaterialCount; i++)
             unsafe
             {
-                model.Materials[i].Shader = lightShader;
+                model.Materials[i].Shader = _lightShader;
             }
     }
     public void SetTextureSamplingMode(uint textureId, ETextureSamplingMode samplingMode)
     {
-        if (!textureRegistry.ContainsKey(textureId)) return;
-        Texture2D texture = textureRegistry[textureId];
+        if (!_textureRegistry.ContainsKey(textureId)) return;
+        Texture2D texture = _textureRegistry[textureId];
         TextureFilter textureFilter = TextureFilter.Point;
         switch (samplingMode)
         {
@@ -149,31 +149,31 @@ public class RaylibRenderer : IRenderer
 
     public void RemoveMesh(uint id)
     {
-        if (!meshRegistry.ContainsKey(id)) return;
-        Model model = meshRegistry[id];
+        if (!_meshRegistry.ContainsKey(id)) return;
+        Model model = _meshRegistry[id];
         Raylib.UnloadModel(model);
-        meshRegistry.Remove(id);
+        _meshRegistry.Remove(id);
     }
     public void RemoveTexture(uint id)
     {
-        if (!textureRegistry.ContainsKey(id)) return;
-        Texture2D texture = textureRegistry[id];
+        if (!_textureRegistry.ContainsKey(id)) return;
+        Texture2D texture = _textureRegistry[id];
         Raylib.UnloadTexture(texture);
-        textureRegistry.Remove(id);
+        _textureRegistry.Remove(id);
     }
     public void RemoveFont(uint id)
     {
-        if (!fontRegistry.ContainsKey(id)) return;
-        Font font = fontRegistry[id];
+        if (!_fontRegistry.ContainsKey(id)) return;
+        Font font = _fontRegistry[id];
         Raylib.UnloadFont(font);
-        fontRegistry.Remove(id);
+        _fontRegistry.Remove(id);
     }
 
     public void BeginMode(ReconCamera3D camera) => Raylib.BeginMode3D(camera.RawCamera);
     public void DrawModel(uint modelId, Vector3 position, float scale)
     {
-        if (!meshRegistry.ContainsKey(modelId)) return;
-        Model model = meshRegistry[modelId];
+        if (!_meshRegistry.ContainsKey(modelId)) return;
+        Model model = _meshRegistry[modelId];
         Raylib.DrawModel(model, position, scale, Color.White);
     }
     public void EndMode() => Raylib.EndMode3D();
@@ -182,14 +182,14 @@ public class RaylibRenderer : IRenderer
 
     public void DrawTexture(uint textureId, int x, int y)
     {
-        if (!textureRegistry.ContainsKey(textureId)) return;
-        Texture2D texture = textureRegistry[textureId];
+        if (!_textureRegistry.ContainsKey(textureId)) return;
+        Texture2D texture = _textureRegistry[textureId];
         Raylib.DrawTexture(texture, x, y, Color.White);
     }
     public void DrawTexture(uint textureId, int px, int py, int sx, int sy, float rotation, Vector2 anchor, Color4 color, TextureLabelScalingMode scalingMode)
     {
-        if (!textureRegistry.ContainsKey(textureId)) return;
-        Texture2D texture = textureRegistry[textureId];
+        if (!_textureRegistry.ContainsKey(textureId)) return;
+        Texture2D texture = _textureRegistry[textureId];
         Rectangle source = new();
         switch (scalingMode)
         {
@@ -216,7 +216,7 @@ public class RaylibRenderer : IRenderer
     public void DrawText(string text, int x, int y, byte textsize, Color4 color) => Raylib.DrawText(text, x, y, textsize, Color4ToRaylibColor(color));
     public void DrawText(string text, int x, int y, uint fontid, byte textsize, Color4 color, Vector2 anchor, float rotation)
     {
-        bool success = fontRegistry.TryGetValue(fontid, out Font font);
+        bool success = _fontRegistry.TryGetValue(fontid, out Font font);
         if (!success) font = Raylib.GetFontDefault();
         Raylib.DrawTextPro(font, text, new Vector2(x, y), anchor, rotation, textsize, 0, Color4ToRaylibColor(color));
     }
@@ -234,7 +234,7 @@ public class RaylibRenderer : IRenderer
 
     public Vector2 GetTextSize(string text, uint fontid, byte fontsize)
     {
-        bool success = fontRegistry.TryGetValue(fontid, out Font font);
+        bool success = _fontRegistry.TryGetValue(fontid, out Font font);
         if (!success) font = Raylib.GetFontDefault();
         return Raylib.MeasureTextEx(font, text, fontsize, 0);
     }
