@@ -24,24 +24,29 @@ public class TextureLabel : GuiObject
     public Color4 ImageColor = new(1, 1, 1, 1);
     public TextureLabelScalingMode ScalingMode = TextureLabelScalingMode.Stretch;
 
-    private string _imageName = "";
-    private uint _imageId = 0;
+    protected string _imageName = "";
+    protected uint _imageId = 0;
+    protected unsafe uint* _currentImage;
 
     public override void Draw(IRenderer renderer)
     {
         base.Draw(renderer);
         if (_imageName == "") return;
-        renderer.DrawTexture(_imageId,
-            TransformCache.PosX, TransformCache.PosY,
-            TransformCache.SizeX, TransformCache.SizeY,
-            TransformCache.Rotation, AnchorPoint, ImageColor,
-            ScalingMode
-        );
+        unsafe
+        {
+            renderer.DrawTexture(*_currentImage,
+                TransformCache.PosX, TransformCache.PosY,
+                TransformCache.SizeX, TransformCache.SizeY,
+                TransformCache.Rotation, AnchorPoint, ImageColor,
+                ScalingMode
+            );
+        }
     }
 
     public override void Ready()
     {
         base.Ready();
         Image = "assets/textures/cpp_colors_thumb.png";
+        unsafe { fixed (uint* ptr = &_imageId) { _currentImage = ptr; } }
     }
 }

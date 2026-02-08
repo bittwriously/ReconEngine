@@ -47,14 +47,17 @@ internal static class ReconCore
             Size = new Vector4(0, 0, 150, 50),
             Name = "TESTBUTTON"
         };
-        var testButton2 = new TextButton()
+        var testButton2 = new TextureButton()
         {
             Parent = maingui,
-            Text = "TEST BUTTON 2",
+            Image = "assets/textures/cpp_colors_thumb.png",
+            HoverImage = "assets/textures/OSAGE.png",
+            PressedImage = "assets/textures/heavy.jpg",
+            ScalingMode = TextureLabelScalingMode.Fit,
             BackgroundColor = new Color4(.3f, .3f, .3f, 1),
             Size = new Vector4(0, 0, 150, 50),
             Position = new Vector4(0, 0, 150, 0),
-            Name = "TESTBUTTON"
+            Name = "TESTBUTTON2"
         };
         Console.WriteLine("CURRENTWORLD");
         TreePrinter.PrintTree(MainWorld.Root);

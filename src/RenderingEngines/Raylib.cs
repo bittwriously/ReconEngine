@@ -191,6 +191,8 @@ public class RaylibRenderer : IRenderer
         if (!_textureRegistry.ContainsKey(textureId)) return;
         Texture2D texture = _textureRegistry[textureId];
         Rectangle source = new();
+        Rectangle dest = new(px, py, sx, sy);
+        Vector2 origin = new(sx * anchor.X, sy * anchor.Y);
         switch (scalingMode)
         {
             case TextureLabelScalingMode.Stretch:
@@ -198,19 +200,18 @@ public class RaylibRenderer : IRenderer
                 break;
             case TextureLabelScalingMode.Fit:
                 float scaleFit = Math.Min((float)sx / texture.Width, (float)sy / texture.Height);
-                float fitW = sx / scaleFit;
-                float fitH = sy / scaleFit;
-                source = new((texture.Width - fitW) / 2, (texture.Height - fitH) / 2, fitW, fitH);
+                float fitW = texture.Width * scaleFit;
+                float fitH = texture.Height * scaleFit;
+                source = new(0, 0, texture.Width, texture.Height);
+                dest = new(px + (sx - fitW) * .5f, py + (sy - fitH) * .5f, fitW, fitH);
                 break;
             case TextureLabelScalingMode.Crop:
-                float scaleCrop = Math.Max((float)sx / texture.Width, (float)sy / texture.Height);
-                float cropW = sx / scaleCrop;
-                float cropH = sy / scaleCrop;
-                source = new((texture.Width - cropW) / 2, (texture.Height - cropH) / 2, cropW, cropH);
+                float scaleCrop = 1 / Math.Max((float)sx / texture.Width, (float)sy / texture.Height);
+                float cropW = sx * scaleCrop;
+                float cropH = sy * scaleCrop;
+                source = new((texture.Width - cropW) * .5f, (texture.Height - cropH) * .5f, cropW, cropH);
                 break;
         }
-        Rectangle dest = new(px, py, sx, sy);
-        Vector2 origin = new(sx * anchor.X, sy * anchor.Y);
         Raylib.DrawTexturePro(texture, source, dest, origin, rotation, Color4ToRaylibColor(color));
     }
     public void DrawText(string text, int x, int y, byte textsize, Color4 color) => Raylib.DrawText(text, x, y, textsize, Color4ToRaylibColor(color));
