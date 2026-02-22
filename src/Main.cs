@@ -1,5 +1,6 @@
 using System.Numerics;
 using ReconEngine.InputSystem;
+using ReconEngine.NetworkingServer;
 using ReconEngine.RenderUtils;
 using ReconEngine.UISystem;
 using ReconEngine.WorldSystem;
@@ -10,6 +11,7 @@ internal static class ReconCore
 {
     public static IRenderer Renderer = new RenderingEngines.RaylibRenderer();
     public static ReconWorld MainWorld = null!;
+    public static ReconNetCatServer? CurrentServer = null;
 
     [STAThread]
     public static void Main()
@@ -22,6 +24,11 @@ internal static class ReconCore
 
         double physicsAccumulator = 0.0;
         const double physicsFrametime = 1.0 / 20.0;
+
+        double serverAccumulator = 0.0;
+        // create a new server for testing!
+        CurrentServer = new();
+        CurrentServer.Start(18100);
 
         var maingui = new ScreenGui()
         {
@@ -81,6 +88,18 @@ internal static class ReconCore
                 testButton2.Position += new Vector4(0, 0, 0, 2);
             }
             /// PHYSICS ///
+            
+            /// SERVER ///
+            if (CurrentServer != null)
+            {
+                serverAccumulator += deltaTime;
+                if (serverAccumulator > CurrentServer.UPDATE_TIME)
+                {
+                    serverAccumulator -= CurrentServer.UPDATE_TIME;
+                    CurrentServer.Update();
+                }
+            }
+            /// SERVER ///
 
             Renderer.BeginFrame();
 
