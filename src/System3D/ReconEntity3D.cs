@@ -1,6 +1,8 @@
 using System.Numerics;
 using ReconEngine.WorldSystem;
 
+namespace ReconEngine.System3D;
+
 public class ReconEntity3D : ReconEntity
 {
     public Vector3 Position = Vector3.Zero;

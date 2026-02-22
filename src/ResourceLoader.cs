@@ -16,14 +16,30 @@ public static class DynamicResouceLoader
     {
         bool exists = _resourceList.TryGetValue(path, out uint existingId);
         if (exists) return existingId;
-        uint newId = type switch
-        {
+        uint newId = 0;
+        switch (type)
+        /*
+
             ResourceAssetType.Texture => ReconCore.Renderer.RegisterTexture(path),
             ResourceAssetType.Model => ReconCore.Renderer.RegisterMesh(path),
             ResourceAssetType.Font => ReconCore.Renderer.RegisterFont(path),
             ResourceAssetType.Sound => 0, //TODO: implement
-            _ => 0,
-        };
+        */
+        {
+            case ResourceAssetType.Texture:
+                newId = ReconCore.Renderer.RegisterTexture(path);
+                break;
+            case ResourceAssetType.Model:
+                newId = ReconCore.Renderer.RegisterMesh(path);
+                ReconCore.Renderer.ApplyLightingShader(newId);
+                break;
+            case ResourceAssetType.Font:
+                newId = ReconCore.Renderer.RegisterFont(path);
+                break;
+            case ResourceAssetType.Sound:
+                break;
+            default: break;
+        }
         _resourceList[path] = newId;
         return newId;
     }

@@ -1,7 +1,5 @@
-using Jitter2;
-using ReconEngine.InputSystem;
+using ReconEngine.MeshSystem;
 using ReconEngine.UISystem;
-using ReconEngine.UISystem.UIGrid;
 
 namespace ReconEngine.WorldSystem;
 
@@ -11,6 +9,7 @@ public class ReconWorld
     public string WorldName { get; set; }
     public float TimeScale = 1.0f;
     public GuiContainerRegistry WorldGuiRegistry = new();
+    public ReconMeshRegistry WorldMeshRegistry = new();
 
     public ReconWorld(string name = "ReconWorld")
     {
