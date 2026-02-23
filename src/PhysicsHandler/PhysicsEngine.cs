@@ -45,4 +45,11 @@ public interface IPhysicsEngine
     public void RemoveAllBodies();
 
     public RaycastResult? Raycast(Vector3 origin, Vector3 direction, RaycastParameters rcparams);
+
+    public void Update(float deltaTime);
+
+    public object GetBoxShape(Vector3 size);
+    public object GetSphereShape(float radius);
+    public object GetConeShape(float radius, float height);
+    public object GetCapsuleShape(float radius, float length);
 }

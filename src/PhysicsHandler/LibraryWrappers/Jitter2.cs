@@ -9,7 +9,7 @@ using ReconEngine.WorldSystem;
 
 namespace ReconEngine.PhysicsHandler.LibraryWrappers;
 
-public class CollisionGroupFilter(CollisionGroupRegistry registry) : INarrowPhaseFilter
+public class Jitter2CollisionGroupFilter(CollisionGroupRegistry registry) : INarrowPhaseFilter
 {
     private readonly CollisionGroupRegistry _registry = registry;
     public bool Filter(RigidBodyShape shapeA, RigidBodyShape shapeB, ref JVector pointA, ref JVector pointB, ref JVector normal, ref float penetration)
@@ -25,7 +25,7 @@ public class Jitter2Body : IPhysicsBody
     private readonly World _worldRef;
     private readonly Jitter2World _wrapperRef;
 
-    internal PhysicsEntity physicsEntity = null!; //sybau
+    public PhysicsEntity PhysicsEntity { get; set; } = null!; //sybau
 
     public Jitter2Body(World jitterWorld, Jitter2World wrapper)
     {
@@ -33,9 +33,23 @@ public class Jitter2Body : IPhysicsBody
         _worldRef = jitterWorld;
         _wrapperRef = wrapper;
 
+        body.MotionType = MotionType.Dynamic;
         body.Tag = this;
     }
     
+    private RigidBodyShape? _shape;
+    public object? Shape
+    {
+        get => _shape;
+        set
+        {
+            if (value is not RigidBodyShape newshape) return;
+            if (_shape != null) body.RemoveShape(_shape);
+            body.AddShape(newshape);
+            _shape = newshape;
+        }
+    }
+
     public Vector3 Position
     {
         get => body.Position;
@@ -81,7 +95,7 @@ public class Jitter2World : IPhysicsEngine
     public Jitter2World()
     {
         defaultCG = CGRegistry.Register("Default");
-        _world.NarrowPhaseFilter = new CollisionGroupFilter(CGRegistry);
+        _world.NarrowPhaseFilter = new Jitter2CollisionGroupFilter(CGRegistry);
         _world.Gravity = new JVector(0, -9.81f, 0);
     }
 
@@ -132,22 +146,22 @@ public class Jitter2World : IPhysicsEngine
             {
                 if (proxy is not RigidBodyShape shape) return false;
                 if (shape.RigidBody?.Tag is not Jitter2Body body) return false;
-                if (body.physicsEntity == null) return false;
+                if (body.PhysicsEntity == null) return false;
                 if (rcparams.ForceCanCollide && !body.CanCollide) return false;
                 if (!body.CanBeCast) return false;
                 switch (rcparams.FilterMode)
                 {
                     case RaycastFilterMode.Whitelist:
-                        if (!rcparams.FilterEntities.Contains(body.physicsEntity)) return false;
+                        if (!rcparams.FilterEntities.Contains(body.PhysicsEntity)) return false;
                         break;
                     case RaycastFilterMode.WhitelistDescendants:
-                        if (!IsInHierarchy(body.physicsEntity, rcparams.FilterEntities)) return false;
+                        if (!IsInHierarchy(body.PhysicsEntity, rcparams.FilterEntities)) return false;
                         break;
                     case RaycastFilterMode.Blacklist:
-                        if (rcparams.FilterEntities.Contains(body.physicsEntity)) return false;
+                        if (rcparams.FilterEntities.Contains(body.PhysicsEntity)) return false;
                         break;
                     case RaycastFilterMode.BlacklistDescendants:
-                        if (IsInHierarchy(body.physicsEntity, rcparams.FilterEntities)) return false;
+                        if (IsInHierarchy(body.PhysicsEntity, rcparams.FilterEntities)) return false;
                         break;
                 }
                 return CGRegistry.Collides(body.CollisionGroup, rcparams.CollisionGroup);
@@ -166,8 +180,15 @@ public class Jitter2World : IPhysicsEngine
         return new RaycastResult(
             hitpos,
             dist,
-            body.physicsEntity!, // im too lazy to check for this rn
+            body.PhysicsEntity!, // im too lazy to check for this rn
             normal
         );
     }
+
+    public void Update(float deltaTime) => _world.Step(deltaTime, multiThread: false);
+
+    public object GetBoxShape(Vector3 size) => new BoxShape(size);
+    public object GetSphereShape(float radius) => new SphereShape(radius);
+    public object GetConeShape(float radius, float height) => new ConeShape(radius, height);
+    public object GetCapsuleShape(float radius, float length) => new CapsuleShape(radius, length);
 }

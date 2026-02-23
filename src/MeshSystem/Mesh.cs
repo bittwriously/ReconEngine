@@ -3,7 +3,7 @@ using ReconEngine.System3D;
 
 namespace ReconEngine.MeshSystem;
 
-public class ReconMesh : ReconEntity3D
+public class ReconMesh : PhysicsEntity
 {
     public Vector3 Size = Vector3.One;
     public string MeshId
@@ -44,6 +44,7 @@ public class ReconMesh : ReconEntity3D
         {
             oldParent?.CurrentWorld?.WorldMeshRegistry.RemoveMesh(this);
             CurrentWorld?.WorldMeshRegistry.RegisterMesh(this);
+            Shape = CurrentWorld?.PhysicsEngine.GetBoxShape(Size);
         };
     }
 }

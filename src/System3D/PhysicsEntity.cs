@@ -1,3 +1,4 @@
+using System.Numerics;
 using ReconEngine.PhysicsHandler;
 
 namespace ReconEngine.System3D;
@@ -5,6 +6,17 @@ namespace ReconEngine.System3D;
 public class PhysicsEntity : ReconEntity3D
 {
     internal IPhysicsBody? _physicsBody;
+
+    public new Vector3 Position
+    {
+        get => _physicsBody != null ? _physicsBody.Position : Vector3.Zero;
+        set => _physicsBody?.Position = value;
+    }
+    public new Quaternion Rotation
+    {
+        get => _physicsBody != null ? _physicsBody.Rotation : Quaternion.Identity;
+        set => _physicsBody?.Rotation = value;
+    }
 
     public bool CanCollide
     {
@@ -27,5 +39,25 @@ public class PhysicsEntity : ReconEntity3D
         set => _physicsBody?.CollisionGroup = value;
     }
 
+    public object? Shape
+    {
+        get => _physicsBody?.Shape;
+        set => _physicsBody?.Shape = value;
+    }
 
+    public override void Ready()
+    {
+        base.Ready();
+
+        ParentChanged += (sender, oldParent) =>
+        {
+            if (_physicsBody != null) oldParent?.CurrentWorld?.PhysicsEngine.RemoveBody(_physicsBody);
+            if (CurrentWorld != null)
+            {
+                IPhysicsBody body = CurrentWorld.PhysicsEngine.CreateBody();
+                body.PhysicsEntity = this;
+                _physicsBody = body;
+            }
+        };
+    }
 }

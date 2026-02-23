@@ -1,4 +1,5 @@
 using System.Numerics;
+using ReconEngine.System3D;
 
 namespace ReconEngine.PhysicsHandler;
 
@@ -6,6 +7,10 @@ public interface IPhysicsBody
 {
     public Vector3 Position { get; set; }
     public Quaternion Rotation { get; set; }
+
+    internal PhysicsEntity PhysicsEntity { get; set; }
+
+    public object? Shape { get; set; }
 
     public string CollisionGroup { get; set; }
     public bool CanCollide { get; set; }

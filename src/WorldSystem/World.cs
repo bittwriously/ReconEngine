@@ -1,4 +1,6 @@
 using ReconEngine.MeshSystem;
+using ReconEngine.PhysicsHandler;
+using ReconEngine.PhysicsHandler.LibraryWrappers;
 using ReconEngine.UISystem;
 
 namespace ReconEngine.WorldSystem;
@@ -10,6 +12,7 @@ public class ReconWorld
     public float TimeScale = 1.0f;
     public GuiContainerRegistry WorldGuiRegistry = new();
     public ReconMeshRegistry WorldMeshRegistry = new();
+    public IPhysicsEngine PhysicsEngine = new Jitter2World();
 
     public ReconWorld(string name = "ReconWorld")
     {
@@ -18,7 +21,11 @@ public class ReconWorld
     }
 
     public void Render(float deltaTime) => RenderRecursive(Root, deltaTime);
-    public void Physics(float deltaTime) => PhysicsRecursive(Root, deltaTime);
+    public void Physics(float deltaTime)
+    {
+        PhysicsEngine.Update(deltaTime);
+        PhysicsRecursive(Root, deltaTime);
+    }
 
     private void RenderRecursive(ReconEntity entity, float deltaTime)
     {
