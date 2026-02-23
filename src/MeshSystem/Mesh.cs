@@ -33,7 +33,7 @@ public class ReconMesh : ReconEntity3D
 
     public void Draw(IRenderer renderer)
     {
-        renderer.DrawModel(_meshId, _textureId, GlobalPosition, GlobalRotation, Size);
+        renderer.DrawModel(_meshId, _textureId, Position, Rotation, Size);
     }
 
     public override void Ready()

@@ -14,53 +14,13 @@ public class ReconEntity3D : ReconEntity
         set => Rotation = EulerToQuaternion(value);
     }
 
-    public Vector3 GlobalPosition
-    {
-        get
-        {
-            if (Parent != null && Parent is ReconEntity3D parent3D) return parent3D.GlobalPosition + Position;
-            return Position;
-        }
-        set
-        {
-            if (Parent != null && Parent is ReconEntity3D parent3D) Position = value - parent3D.GlobalPosition;
-            else Position = value;
-        }
-    }
-
-    public Quaternion GlobalRotation
-    {
-        get
-        {
-            if (Parent is ReconEntity3D parent3D)
-                return parent3D.GlobalRotation * Rotation;
-            return Rotation;
-        }
-        set
-        {
-            if (Parent is ReconEntity3D parent3D)
-                Rotation = Quaternion.Inverse(parent3D.GlobalRotation) * value;
-            else Rotation = value;
-        }
-    }
-
     public Matrix4x4 LocalTransform =>
         Matrix4x4.CreateFromQuaternion(Rotation) *
         Matrix4x4.CreateTranslation(Position);
 
-    public Matrix4x4 GlobalTransform
-    {
-        get
-        {
-            if (Parent is ReconEntity3D parent3D)
-                return LocalTransform * parent3D.GlobalTransform;
-            return LocalTransform;
-        }
-    }
-
-    public Vector3 Forward => Vector3.Transform(-Vector3.UnitZ, GlobalRotation);
-    public Vector3 Right => Vector3.Transform(Vector3.UnitX, GlobalRotation);
-    public Vector3 Up => Vector3.Transform(Vector3.UnitY, GlobalRotation);
+    public Vector3 Forward => Vector3.Transform(-Vector3.UnitZ, Rotation);
+    public Vector3 Right => Vector3.Transform(Vector3.UnitX, Rotation);
+    public Vector3 Up => Vector3.Transform(Vector3.UnitY, Rotation);
 
     private static Vector3 QuaternionToEuler(Quaternion q)
     {
