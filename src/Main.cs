@@ -36,13 +36,14 @@ internal static class ReconCore
         ReconMesh mesh = new();
         mesh.MeshId = "assets/models/utah_teapot_new.obj";
         mesh.TextureId = "assets/textures/utahgrid.png";
+        mesh.Size = new(6.43f, 3.15f, 4.0f);
         mesh.Parent = MainWorld.Root;
         ReconMesh floor = new();
         floor.MeshId = "assets/models/cube.obj";
         floor.TextureId = "assets/textures/utahgrid.png";
         floor.Size = new(16, 1, 16);
         floor.Position = new(0, -4, 0);
-        //floor.Static = true;
+        floor.Static = true;
         floor.Parent = MainWorld.Root;
 
         while (!Renderer.ShouldClose())

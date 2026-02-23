@@ -185,14 +185,43 @@ public class RaylibRenderer : IRenderer
         _fontRegistry.Remove(id);
     }
 
+    private static Vector3 GetScaleForSize(Model model, Vector3 targetSize, bool uniform)
+    {
+        BoundingBox bounds = Raylib.GetModelBoundingBox(model);
+        Vector3 modelSize = bounds.Max - bounds.Min;
+        if (uniform)
+        {
+            float scaleX = targetSize.X / modelSize.X;
+            float scaleY = targetSize.Y / modelSize.Y;
+            float scaleZ = targetSize.Z / modelSize.Z;
+            float uniformScale = MathF.Min(scaleX, MathF.Min(scaleY, scaleZ));
+            return new Vector3(uniformScale);
+        }
+        else
+        {
+            return new Vector3(
+                targetSize.X / modelSize.X,
+                targetSize.Y / modelSize.Y,
+                targetSize.Z / modelSize.Z
+            );
+        }
+    }
+    private static Vector3 GetModelCenter(Model model)
+    {
+        BoundingBox bounds = Raylib.GetModelBoundingBox(model);
+        return (bounds.Min + bounds.Max) * 0.5f;
+    }
+
     public void BeginMode(ReconCamera3D camera) => Raylib.BeginMode3D(camera.RawCamera);
-    public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 scale)
+    public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 size)
     {
         Model model = GetMaterializedModel(modelId, textureId);
         float angle = 2f * MathF.Acos(rotation.W) * (180f / MathF.PI);
         Vector3 axis = angle == 0
             ? Vector3.UnitY
             : Vector3.Normalize(new Vector3(rotation.X, rotation.Y, rotation.Z));
+        Vector3 scale = GetScaleForSize(model, size, false);
+        position -= GetModelCenter(model) * scale;
         Raylib.DrawModelEx(model, position, axis, angle, scale, Color.White);
     }
     public void EndMode() => Raylib.EndMode3D();
