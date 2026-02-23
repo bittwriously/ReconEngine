@@ -5,7 +5,16 @@ namespace ReconEngine.MeshSystem;
 
 public class ReconMesh : PhysicsEntity
 {
-    public Vector3 Size = Vector3.One;
+    private Vector3 _size = Vector3.One;
+    public Vector3 Size
+    {
+        get => _size;
+        set
+        {
+            _size = value;
+            Shape = CurrentWorld?.PhysicsEngine.GetBoxShape(value);
+        }
+    }
     public string MeshId
     {
         get => _meshPath;
