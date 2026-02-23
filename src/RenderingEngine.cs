@@ -27,7 +27,6 @@ public interface IRenderer
     public uint RegisterTexture(string filepath);
     public uint RegisterFont(string filepath);
 
-    public void ApplyLightingShader(uint modelId);
     public void SetTextureSamplingMode(uint textureId, ETextureSamplingMode samplingMode);
 
     public void RemoveMesh(uint id);
@@ -36,7 +35,7 @@ public interface IRenderer
 
     // switch to 3d manager (used for game world)
     public void BeginMode(ReconCamera3D camera);
-    public void DrawModel(uint modelId, Vector3 position, float scale);
+    public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 scale);
     public void EndMode();
 
     // 2d methods (used for guis)

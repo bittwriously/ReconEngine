@@ -1,4 +1,5 @@
 using System.Numerics;
+using Raylib_cs;
 using ReconEngine.InputSystem;
 using ReconEngine.MeshSystem;
 using ReconEngine.NetworkingServer;
@@ -32,7 +33,8 @@ internal static class ReconCore
         CurrentServer.Start(18100);
 
         ReconMesh mesh = new();
-        mesh.MeshId = "assets/models/utah_teapot.glb";
+        mesh.MeshId = "assets/models/utah_teapot_new.obj";
+        mesh.TextureId = "assets/textures/utahgrid.png";
         mesh.Parent = MainWorld.Root;
 
         while (!Renderer.ShouldClose())
@@ -84,6 +86,8 @@ internal static class ReconCore
             /// UI DRAW CALLS ///
             MainWorld.WorldGuiRegistry.DrawContainers(Renderer);
             /// UI DRAW CALLS ///
+
+            Raylib.DrawFPS(16, 16);
 
             Renderer.EndFrame();
         }

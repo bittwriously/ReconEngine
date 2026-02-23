@@ -30,6 +30,8 @@ public enum RaylibLightType
 public class RaylibRenderer : IRenderer
 {
     private readonly Dictionary<uint, Model> _meshRegistry = [];
+    private readonly Dictionary<uint, string> _meshPaths = [];
+    private readonly Dictionary<(uint meshId, uint textureId), Model> _materializedModels = new();
     private uint _meshRegistryCounter = 0;
     private readonly Dictionary<uint, Texture2D> _textureRegistry = [];
     private uint _textureRegistryCounter = 0;
@@ -64,7 +66,7 @@ public class RaylibRenderer : IRenderer
         Raylib.SetConfigFlags(ConfigFlags.VSyncHint);
 
         Raylib.InitWindow(width, height, title);
-        //Raylib.DisableCursor();
+        Raylib.DisableCursor();
 
         _lightShader = Raylib.LoadShader("assets/shaders/lighting.vs", "assets/shaders/lighting.fs");
         unsafe { _lightShader.Locs[(int)ShaderLocationIndex.VectorView] = Raylib.GetShaderLocation(_lightShader, "viewPos"); }
@@ -80,6 +82,7 @@ public class RaylibRenderer : IRenderer
             Target = Vector3.Zero,
             Color = Color.White
         };
+
         InitLight(ref _sun, _lightShader);
     }
     public void CloseWindow() => Raylib.CloseWindow();
@@ -98,6 +101,7 @@ public class RaylibRenderer : IRenderer
         Model model = Raylib.LoadModel(filepath);
         _meshRegistryCounter++;
         _meshRegistry.Add(_meshRegistryCounter, model);
+        _meshPaths.Add(_meshRegistryCounter, filepath);
         return _meshRegistryCounter;
     }
     public uint RegisterTexture(string filepath)
@@ -117,20 +121,35 @@ public class RaylibRenderer : IRenderer
         return _fontRegistryCounter;
     }
 
-    public void ApplyLightingShader(uint modelId)
+    private Model GetMaterializedModel(uint modelId, uint textureId)
     {
-        if (!_meshRegistry.ContainsKey(modelId)) return;
-        Model model = _meshRegistry[modelId];
-        for (int i = 0; i < model.MaterialCount; i++)
-            unsafe
-            {
-                model.Materials[i].Shader = _lightShader;
-            }
+        var key = (modelId, textureId);
+        if (_materializedModels.TryGetValue(key, out Model existing))
+            return existing;
+        string path = _meshPaths[modelId];
+        Model clone = Raylib.LoadModel(path);
+        if (textureId != 0)
+        unsafe {
+            Texture2D texture = _textureRegistry[textureId];
+            Raylib.SetMaterialTexture(ref clone.Materials[0], MaterialMapIndex.Diffuse, texture);
+        }
+        _materializedModels[key] = clone;
+        ApplyLightingShader(clone);
+        return clone;
     }
+
+    private void ApplyLightingShader(Model model)
+    {
+        for (int i = 0; i < model.MaterialCount; i++)
+        unsafe
+        {
+            model.Materials[i].Shader = _lightShader;
+        }
+    }
+    
     public void SetTextureSamplingMode(uint textureId, ETextureSamplingMode samplingMode)
     {
-        if (!_textureRegistry.ContainsKey(textureId)) return;
-        Texture2D texture = _textureRegistry[textureId];
+        if (!_textureRegistry.TryGetValue(textureId, out Texture2D texture)) return;
         TextureFilter textureFilter = TextureFilter.Point;
         switch (samplingMode)
         {
@@ -149,32 +168,32 @@ public class RaylibRenderer : IRenderer
 
     public void RemoveMesh(uint id)
     {
-        if (!_meshRegistry.ContainsKey(id)) return;
-        Model model = _meshRegistry[id];
+        if (!_meshRegistry.TryGetValue(id, out Model model)) return;
         Raylib.UnloadModel(model);
         _meshRegistry.Remove(id);
     }
     public void RemoveTexture(uint id)
     {
-        if (!_textureRegistry.ContainsKey(id)) return;
-        Texture2D texture = _textureRegistry[id];
+        if (!_textureRegistry.TryGetValue(id, out Texture2D texture)) return;
         Raylib.UnloadTexture(texture);
         _textureRegistry.Remove(id);
     }
     public void RemoveFont(uint id)
     {
-        if (!_fontRegistry.ContainsKey(id)) return;
-        Font font = _fontRegistry[id];
+        if (!_fontRegistry.TryGetValue(id, out Font font)) return;
         Raylib.UnloadFont(font);
         _fontRegistry.Remove(id);
     }
 
     public void BeginMode(ReconCamera3D camera) => Raylib.BeginMode3D(camera.RawCamera);
-    public void DrawModel(uint modelId, Vector3 position, float scale)
+    public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 scale)
     {
-        if (!_meshRegistry.ContainsKey(modelId)) return;
-        Model model = _meshRegistry[modelId];
-        Raylib.DrawModel(model, position, scale, Color.White);
+        Model model = GetMaterializedModel(modelId, textureId);
+        float angle = 2f * MathF.Acos(rotation.W) * (180f / MathF.PI);
+        Vector3 axis = angle == 0
+            ? Vector3.UnitY
+            : Vector3.Normalize(new Vector3(rotation.X, rotation.Y, rotation.Z));
+        Raylib.DrawModelEx(model, position, axis, angle, scale, Color.White);
     }
     public void EndMode() => Raylib.EndMode3D();
 
@@ -182,14 +201,12 @@ public class RaylibRenderer : IRenderer
 
     public void DrawTexture(uint textureId, int x, int y)
     {
-        if (!_textureRegistry.ContainsKey(textureId)) return;
-        Texture2D texture = _textureRegistry[textureId];
+        if (!_textureRegistry.TryGetValue(textureId, out Texture2D texture)) return;
         Raylib.DrawTexture(texture, x, y, Color.White);
     }
     public void DrawTexture(uint textureId, int px, int py, int sx, int sy, float rotation, Vector2 anchor, Color4 color, TextureLabelScalingMode scalingMode)
     {
-        if (!_textureRegistry.ContainsKey(textureId)) return;
-        Texture2D texture = _textureRegistry[textureId];
+        if (!_textureRegistry.TryGetValue(textureId, out Texture2D texture)) return;
         Rectangle source = new();
         Rectangle dest = new(px, py, sx, sy);
         Vector2 origin = new(sx * anchor.X, sy * anchor.Y);

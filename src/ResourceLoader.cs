@@ -31,7 +31,6 @@ public static class DynamicResouceLoader
                 break;
             case ResourceAssetType.Model:
                 newId = ReconCore.Renderer.RegisterMesh(path);
-                ReconCore.Renderer.ApplyLightingShader(newId);
                 break;
             case ResourceAssetType.Font:
                 newId = ReconCore.Renderer.RegisterFont(path);

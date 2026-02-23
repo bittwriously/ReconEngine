@@ -15,13 +15,25 @@ public class ReconMesh : ReconEntity3D
             _meshPath = value;
         }
     }
+    public string TextureId
+    {
+        get => _texturePath;
+        set
+        {
+            _textureId = DynamicResouceLoader.LoadAsset(value, ResourceAssetType.Texture);;
+            _texturePath = value;
+        }
+    }
 
-    public uint _meshId = 1;
+    public uint _meshId = 0;
     public string _meshPath = "";
+
+    public uint _textureId = 0;
+    public string _texturePath = "";
 
     public void Draw(IRenderer renderer)
     {
-        renderer.DrawModel(_meshId, GlobalPosition, 1);
+        renderer.DrawModel(_meshId, _textureId, GlobalPosition, GlobalRotation, Size);
     }
 
     public override void Ready()
