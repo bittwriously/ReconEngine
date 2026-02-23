@@ -1,0 +1,173 @@
+using System.Numerics;
+using Jitter2;
+using Jitter2.Collision;
+using Jitter2.Collision.Shapes;
+using Jitter2.Dynamics;
+using Jitter2.LinearMath;
+using ReconEngine.System3D;
+using ReconEngine.WorldSystem;
+
+namespace ReconEngine.PhysicsHandler.LibraryWrappers;
+
+public class CollisionGroupFilter(CollisionGroupRegistry registry) : INarrowPhaseFilter
+{
+    private readonly CollisionGroupRegistry _registry = registry;
+    public bool Filter(RigidBodyShape shapeA, RigidBodyShape shapeB, ref JVector pointA, ref JVector pointB, ref JVector normal, ref float penetration)
+    {
+        if (shapeA.RigidBody?.Tag is not Jitter2Body a || shapeB.RigidBody?.Tag is not Jitter2Body b) return true;
+        return _registry.Collides(a.CollisionGroup, b.CollisionGroup);
+    }
+}
+
+public class Jitter2Body : IPhysicsBody
+{
+    internal RigidBody body;
+    private readonly World _worldRef;
+    private readonly Jitter2World _wrapperRef;
+
+    internal PhysicsEntity physicsEntity = null!; //sybau
+
+    public Jitter2Body(World jitterWorld, Jitter2World wrapper)
+    {
+        body = jitterWorld.CreateRigidBody();
+        _worldRef = jitterWorld;
+        _wrapperRef = wrapper;
+
+        body.Tag = this;
+    }
+    
+    public Vector3 Position
+    {
+        get => body.Position;
+        set => body.Position = value;
+    }
+    public Quaternion Rotation
+    {
+        get => body.Orientation;
+        set => body.Orientation = value;
+    }
+
+    public bool CanCollide { get; set; } = true;
+    public bool CanBeCast { get; set; } = true;
+    public bool Static
+    {
+        get => body.MotionType == MotionType.Static;
+        set => body.MotionType = value ? MotionType.Static : MotionType.Dynamic;
+    }
+
+    private string _collisionGroup = "Default";
+    public string CollisionGroup
+    {
+        get => _collisionGroup;
+        set
+        {
+            _wrapperRef.CGRegistry.UnregisterBody(this);
+            _wrapperRef.CGRegistry.RegisterBody(this, value);
+            body.Tag = value;
+            _collisionGroup = value;
+        }
+    }
+
+}
+
+public class Jitter2World : IPhysicsEngine
+{
+    private readonly World _world = new();
+    public CollisionGroupRegistry CGRegistry = new();
+    internal readonly ulong defaultCG;
+
+    private readonly List<Jitter2Body> _bodies = [];
+
+    public Jitter2World()
+    {
+        defaultCG = CGRegistry.Register("Default");
+        _world.NarrowPhaseFilter = new CollisionGroupFilter(CGRegistry);
+        _world.Gravity = new JVector(0, -9.81f, 0);
+    }
+
+    public IPhysicsBody CreateBody()
+    {
+        Jitter2Body body = new(_world, this);
+        _bodies.Add(body);
+        return body;
+    }
+    public void RemoveBody(IPhysicsBody body) { if (body is Jitter2Body wrapper) _removeBody(wrapper); }
+    private void _removeBody(Jitter2Body wrapper)
+    {
+        _world.Remove(wrapper.body);
+        _bodies.Remove(wrapper);
+    }
+
+    public string GetDefaultCollisionGroup() => "Default";
+
+    public ulong CreateCollisionGroup(string name) => CGRegistry.Register(name);
+    public void SetCollisionGroupBit(string coll1, string coll2, bool value) => CGRegistry.SetCollision(coll1, coll2, value);
+    public bool GetCollisionGroupBit(string coll1, string coll2) => CGRegistry.Collides(coll1, coll2);
+    public IPhysicsBody[] GetCollisionGroupMembers(string name) => [.. CGRegistry.GetGroupBodies(name)];
+    public void RemoveCollisionGroup(string name) => CGRegistry.Unregister(name);
+
+    public IPhysicsBody[] GetBodies() => [.. _bodies];
+    public void RemoveAllBodies()
+    {
+        foreach (Jitter2Body body in _bodies) RemoveBody(body);
+    }
+
+    private static bool IsInHierarchy(ReconEntity entity, HashSet<ReconEntity> filter)
+    {
+        var current = entity;
+        while (current != null)
+        {
+            if (filter.Contains(current)) return true;
+            current = current.Parent;
+        }
+        return false;
+    }
+
+    public RaycastResult? Raycast(Vector3 origin, Vector3 direction, RaycastParameters rcparams)
+    {
+        bool hit = _world.DynamicTree.RayCast(
+            origin,
+            direction,
+            proxy =>
+            {
+                if (proxy is not RigidBodyShape shape) return false;
+                if (shape.RigidBody?.Tag is not Jitter2Body body) return false;
+                if (body.physicsEntity == null) return false;
+                if (rcparams.ForceCanCollide && !body.CanCollide) return false;
+                if (!body.CanBeCast) return false;
+                switch (rcparams.FilterMode)
+                {
+                    case RaycastFilterMode.Whitelist:
+                        if (!rcparams.FilterEntities.Contains(body.physicsEntity)) return false;
+                        break;
+                    case RaycastFilterMode.WhitelistDescendants:
+                        if (!IsInHierarchy(body.physicsEntity, rcparams.FilterEntities)) return false;
+                        break;
+                    case RaycastFilterMode.Blacklist:
+                        if (rcparams.FilterEntities.Contains(body.physicsEntity)) return false;
+                        break;
+                    case RaycastFilterMode.BlacklistDescendants:
+                        if (IsInHierarchy(body.physicsEntity, rcparams.FilterEntities)) return false;
+                        break;
+                }
+                return CGRegistry.Collides(body.CollisionGroup, rcparams.CollisionGroup);
+            },
+            null,
+            out IDynamicTreeProxy? proxy,
+            out JVector normal,
+            out float lambda
+        );
+        if (!hit) return null;
+        RigidBodyShape? hitShape = hit ? proxy as RigidBodyShape : null;
+        if (hitShape == null) return null;
+        if (hitShape.RigidBody.Tag is not Jitter2Body body) return null;
+        Vector3 hitpos = origin + direction * lambda;
+        float dist = (direction * lambda).Length();
+        return new RaycastResult(
+            hitpos,
+            dist,
+            body.physicsEntity!, // im too lazy to check for this rn
+            normal
+        );
+    }
+}

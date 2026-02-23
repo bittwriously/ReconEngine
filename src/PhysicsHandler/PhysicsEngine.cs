@@ -1,4 +1,6 @@
 using System.Numerics;
+using ReconEngine.System3D;
+using ReconEngine.WorldSystem;
 
 namespace ReconEngine.PhysicsHandler;
 
@@ -7,22 +9,23 @@ public enum RaycastFilterMode
     Whitelist,
     Blacklist,
     WhitelistDescendants,
+    BlacklistDescendants,
 }
 
 public struct RaycastParameters
 {
     public string CollisionGroup;
     public RaycastFilterMode FilterMode;
-    public IPhysicsBody[] FilteredBodies;
+    public HashSet<ReconEntity> FilterEntities;
     public bool ForceCanCollide;
 }
 
-public readonly struct RaycastResult
+public readonly struct RaycastResult(Vector3 pos, float dist, PhysicsEntity body, Vector3 normal)
 {
-    public readonly Vector3 Position;
-    public readonly float Distance;
-    public readonly IPhysicsBody Body;
-    public readonly Vector3 Normal;
+    public readonly Vector3 Position = pos;
+    public readonly float Distance = dist;
+    public readonly PhysicsEntity Body = body;
+    public readonly Vector3 Normal = normal;
 }
 
 public interface IPhysicsEngine
@@ -32,8 +35,8 @@ public interface IPhysicsEngine
 
     public string GetDefaultCollisionGroup();
 
-    public uint CreateCollisionGroup(string name);
-    public void SetCollisionGroupBit(string coll1, string coll2);
+    public ulong CreateCollisionGroup(string name);
+    public void SetCollisionGroupBit(string coll1, string coll2, bool value);
     public bool GetCollisionGroupBit(string coll1, string coll2);
     public IPhysicsBody[] GetCollisionGroupMembers(string name);
     public void RemoveCollisionGroup(string name);
@@ -41,5 +44,5 @@ public interface IPhysicsEngine
     public IPhysicsBody[] GetBodies();
     public void RemoveAllBodies();
 
-    public RaycastResult Raycast(Vector3 origin, Vector3 direction, ref RaycastParameters rcparams);
+    public RaycastResult? Raycast(Vector3 origin, Vector3 direction, RaycastParameters rcparams);
 }
