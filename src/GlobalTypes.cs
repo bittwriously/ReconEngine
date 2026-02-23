@@ -18,6 +18,31 @@ public static class ReconMath
         if (value > .5f) return value - offset;
         else return value + offset;
     }
+
+    public static Vector3 Lerp(Vector3 a, Vector3 b, float t)
+    {
+        t = Math.Clamp(t, 0f, 1f);
+        return new Vector3(
+            a.X + (b.X - a.X) * t,
+            a.Y + (b.Y - a.Y) * t,
+            a.Z + (b.Z - a.Z) * t
+        );
+    }
+
+    public static Quaternion Lerp(Quaternion a, Quaternion b, float t)
+    {
+        t = Math.Clamp(t, 0f, 1f);
+        float dot = a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W;
+        if (dot < 0f)
+            b = new Quaternion(-b.X, -b.Y, -b.Z, -b.W);
+        Quaternion result = new(
+            a.X + (b.X - a.X) * t,
+            a.Y + (b.Y - a.Y) * t,
+            a.Z + (b.Z - a.Z) * t,
+            a.W + (b.W - a.W) * t
+        );
+        return Quaternion.Normalize(result);
+    }
 }
 
 public struct Color4(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)

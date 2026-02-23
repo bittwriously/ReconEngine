@@ -14,6 +14,8 @@ internal static class ReconCore
     public static IRenderer Renderer = new RenderingEngines.RaylibRenderer();
     public static ReconWorld MainWorld = null!;
     public static ReconNetCatServer? CurrentServer = null;
+    public static double RunningTime { get; private set; } = 0.0;
+    public static readonly double PhysicsFrametime = 1.0 / 20.0;
 
     [STAThread]
     public static void Main()
@@ -25,9 +27,8 @@ internal static class ReconCore
         MainWorld = new("MainWorld");
 
         double physicsAccumulator = 0.0;
-        const double physicsFrametime = 1.0 / 20.0;
-
         double serverAccumulator = 0.0;
+
         // create a new server for testing!
         CurrentServer = new();
         CurrentServer.Start(18100);
@@ -41,7 +42,7 @@ internal static class ReconCore
         floor.TextureId = "assets/textures/utahgrid.png";
         floor.Size = new(16, 1, 16);
         floor.Position = new(0, -4, 0);
-        floor.Static = true;
+        //floor.Static = true;
         floor.Parent = MainWorld.Root;
 
         while (!Renderer.ShouldClose())
@@ -49,15 +50,16 @@ internal static class ReconCore
             camera.Update();
 
             float deltaTime = Renderer.GetFrameTime();
+            RunningTime += deltaTime;
 
             /// PHYSICS ///
             physicsAccumulator += MathF.Min(deltaTime, 0.25f);
-            if (physicsAccumulator >= physicsFrametime)
+            if (physicsAccumulator >= PhysicsFrametime)
             {
                 // do physics here
-                physicsAccumulator -= physicsFrametime;
-                MainWorld.Root.PhysicsStep((float)physicsFrametime);
-                MainWorld.PhysicsEngine.Update((float)physicsFrametime);
+                physicsAccumulator -= PhysicsFrametime;
+                MainWorld.Root.PhysicsStep((float)PhysicsFrametime);
+                MainWorld.PhysicsEngine.Update((float)PhysicsFrametime);
             }
             /// PHYSICS ///
             
