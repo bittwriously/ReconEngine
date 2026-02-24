@@ -55,7 +55,7 @@ public class PhysicsEntity : ReconEntity3D
     {
         base.Ready();
 
-        ParentChanged += (sender, oldParent) =>
+        AncestryChanged += (sender, oldWorld) =>
         {
             if (_physicsBody != null)
             {
@@ -67,7 +67,7 @@ public class PhysicsEntity : ReconEntity3D
                 _collisionGroup = _physicsBody.CollisionGroup;
                 _shape = _physicsBody.Shape;
 
-                oldParent?.CurrentWorld?.PhysicsEngine.RemoveBody(_physicsBody);
+                oldWorld?.PhysicsEngine.RemoveBody(_physicsBody);
                 _physicsBody = null;
             }
 

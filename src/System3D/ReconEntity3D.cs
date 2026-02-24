@@ -22,7 +22,7 @@ public class ReconEntity3D : ReconEntity
     public Vector3 Right => Vector3.Transform(Vector3.UnitX, Rotation);
     public Vector3 Up => Vector3.Transform(Vector3.UnitY, Rotation);
 
-    private static Vector3 QuaternionToEuler(Quaternion q)
+    protected static Vector3 QuaternionToEuler(Quaternion q)
     {
         float sinr = 2f * (q.W * q.X + q.Y * q.Z);
         float cosr = 1f - 2f * (q.X * q.X + q.Y * q.Y);
@@ -39,7 +39,7 @@ public class ReconEntity3D : ReconEntity
         return new Vector3(roll * toDeg, pitch * toDeg, yaw * toDeg);
     }
 
-    private static Quaternion EulerToQuaternion(Vector3 eulerDeg)
+    protected static Quaternion EulerToQuaternion(Vector3 eulerDeg)
     {
         const float toRad = MathF.PI / 180f;
         return Quaternion.CreateFromYawPitchRoll(

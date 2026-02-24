@@ -170,7 +170,7 @@ public abstract class GuiObject : ReconEntity
     {
         base.Ready();
         UpdateChildrenOrder();
-        ParentChanged += (sender, oldParent) =>
+        AncestryChanged += (sender, oldWorld) =>
         {
             AssignedContainer?.ContainerGrid.UnregisterObject(this);
 

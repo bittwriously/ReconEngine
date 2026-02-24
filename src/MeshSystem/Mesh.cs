@@ -66,9 +66,9 @@ public class ReconMesh : PhysicsEntity
     {
         base.Ready();
 
-        ParentChanged += (sender, oldParent) =>
+        AncestryChanged += (sender, oldWorld) =>
         {
-            oldParent?.CurrentWorld?.WorldMeshRegistry.RemoveMesh(this);
+            oldWorld?.WorldMeshRegistry.RemoveMesh(this);
             CurrentWorld?.WorldMeshRegistry.RegisterMesh(this);
             Shape = CurrentWorld?.PhysicsEngine.GetBoxShape(Size);
         };

@@ -44,9 +44,9 @@ public abstract class GuiContainer : ReconEntity
         base.Ready();
 
         ContainerGrid = new(ReconCore.Renderer.GetScreenSize(), 128);
-        ParentChanged += (sender, oldParent) =>
+        AncestryChanged += (sender, oldWorld) =>
         {
-            oldParent?.CurrentWorld?.WorldGuiRegistry.RemoveContainer(this);
+            oldWorld?.WorldGuiRegistry.RemoveContainer(this);
             CurrentWorld?.WorldGuiRegistry.RegisterContainer(this);
         };
 
