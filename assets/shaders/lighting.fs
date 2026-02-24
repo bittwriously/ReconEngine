@@ -1,82 +1,102 @@
 #version 330
 
-// Input vertex attributes (from vertex shader)
 in vec3 fragPosition;
 in vec2 fragTexCoord;
-//in vec4 fragColor;
 in vec3 fragNormal;
 
-// Input uniform values
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
+uniform vec3 viewPos;
+uniform vec4 ambient;
 
-// Output fragment color
-out vec4 finalColor;
-
-// NOTE: Add here your custom variables
-
-#define     MAX_LIGHTS              4
-#define     LIGHT_DIRECTIONAL       0
-#define     LIGHT_POINT             1
-
-struct MaterialProperty {
-    vec3 color;
-    int useSampler;
-    sampler2D sampler;
-};
+#define MAX_LIGHTS 4
+#define LIGHT_DIRECTIONAL 0
+#define LIGHT_POINT       1
+#define LIGHT_SPOT        2
 
 struct Light {
-    int enabled;
-    int type;
-    vec3 position;
-    vec3 target;
-    vec4 color;
+    int   enabled;
+    int   type;
+    vec3  position;
+    vec3  target;
+    vec4  color;
+    float distance;
+    float innerAngle;
+    float outerAngle;
 };
 
-// Input lighting values
 uniform Light lights[MAX_LIGHTS];
-uniform vec4 ambient;
-uniform vec3 viewPos;
+
+out vec4 finalColor;
 
 void main()
 {
-    // Texel color fetching from texture sampler
-    vec4 texelColor = texture(texture0, fragTexCoord);
-    vec3 lightDot = vec3(0.0);
-    vec3 normal = normalize(fragNormal);
-    vec3 viewD = normalize(viewPos - fragPosition);
-    vec3 specular = vec3(0.0);
+    vec4 texel   = texture(texture0, fragTexCoord) * colDiffuse;
+    vec3 normal  = normalize(fragNormal);
+    vec3 viewDir = normalize(viewPos - fragPosition);
 
-    // NOTE: Implement here your fragment shader code
+    vec3 diffuseAccum  = vec3(0.0);
+    vec3 specularAccum = vec3(0.0);
 
     for (int i = 0; i < MAX_LIGHTS; i++)
     {
-        if (lights[i].enabled == 1)
+        if (lights[i].enabled != 1) continue;
+
+        vec3  lightDir;
+        float attenuation = 1.0;
+
+        if (lights[i].type == LIGHT_DIRECTIONAL)
         {
-            vec3 light = vec3(0.0);
+            lightDir = normalize(lights[i].target);
+        }
+        else if (lights[i].type == LIGHT_POINT)
+        {
+            vec3  toLight    = lights[i].position - fragPosition;
+            float dist       = length(toLight);
+            lightDir         = toLight / dist;
 
-            if (lights[i].type == LIGHT_DIRECTIONAL)
-            {
-                light = -normalize(lights[i].target - lights[i].position);
-            }
+            float range      = max(lights[i].distance, 0.001);
+            float normalDist = dist / range;
+            attenuation      = clamp(1.0 - normalDist * normalDist, 0.0, 1.0);
+            attenuation     *= attenuation;
+        }
+        else if (lights[i].type == LIGHT_SPOT)
+        {
+            vec3  toLight    = lights[i].position - fragPosition;
+            float dist       = length(toLight);
+            lightDir         = toLight / dist;
 
-            if (lights[i].type == LIGHT_POINT)
-            {
-                light = normalize(lights[i].position - fragPosition);
-            }
+            float range      = max(lights[i].distance, 0.001);
+            float normalDist = dist / range;
+            float distAtten  = clamp(1.0 - normalDist * normalDist, 0.0, 1.0);
+            distAtten       *= distAtten;
 
-            float NdotL = max(dot(normal, light), 0.0);
-            lightDot += lights[i].color.rgb*NdotL;
+            vec3  spotDir    = normalize(-lights[i].target);
+            float cosAngle   = dot(spotDir, lightDir);
+            float cosInner   = cos(lights[i].innerAngle);
+            float cosOuter   = cos(lights[i].outerAngle);
 
-            float specCo = 0.0;
-            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
-            specular += specCo;
+            float spotAtten  = smoothstep(cosOuter, cosInner, cosAngle);
+
+            attenuation = distAtten * spotAtten;
+        }
+
+        vec3 lightColor = lights[i].color.rgb * attenuation;
+        float NdotL = max(dot(normal, lightDir), 0.0);
+        diffuseAccum += lightColor * NdotL;
+
+        // blinn-phong specular
+        if (NdotL > 0.0)
+        {
+            vec3  halfDir = normalize(lightDir + viewDir);
+            float spec    = pow(max(dot(normal, halfDir), 0.0), 32.0);
+            specularAccum += lightColor * spec * 0.5;
         }
     }
 
-    finalColor = (texelColor*((colDiffuse + vec4(specular, 1.0))*vec4(lightDot, 1.0)));
-    finalColor += texelColor*(ambient/10.0)*colDiffuse;
+    vec3 ambientColor = ambient.rgb * texel.rgb;
+    vec3 result       = ambientColor + (diffuseAccum + specularAccum) * texel.rgb;
 
-    // Gamma correction
-    finalColor = pow(finalColor, vec4(1.0/2.2));
+    result     = pow(result, vec3(1.0 / 2.2));
+    finalColor = vec4(result, texel.a);
 }

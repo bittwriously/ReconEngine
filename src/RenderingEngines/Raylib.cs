@@ -31,35 +31,27 @@ public class RaylibRenderer : IRenderer
 {
     private readonly Dictionary<uint, Model> _meshRegistry = [];
     private readonly Dictionary<uint, string> _meshPaths = [];
-    private readonly Dictionary<(uint meshId, uint textureId), Model> _materializedModels = new();
+    private readonly Dictionary<(uint meshId, uint textureId), Model> _materializedModels = [];
     private uint _meshRegistryCounter = 0;
     private readonly Dictionary<uint, Texture2D> _textureRegistry = [];
     private uint _textureRegistryCounter = 0;
     private readonly Dictionary<uint, Font> _fontRegistry = [];
     private uint _fontRegistryCounter = 0;
-    private RaylibLight _sun;
     private Shader _lightShader;
 
-    public void InitLight(ref RaylibLight light, Shader shader)
-    {
-        light.EnabledLoc = Raylib.GetShaderLocation(shader, "lights[0].enabled");
-        light.TypeLoc = Raylib.GetShaderLocation(shader, "lights[0].type");
-        light.PosLoc = Raylib.GetShaderLocation(shader, "lights[0].position");
-        light.TargetLoc = Raylib.GetShaderLocation(shader, "lights[0].target");
-        light.ColorLoc = Raylib.GetShaderLocation(shader, "lights[0].color");
+    private const int _max_lights = 256;
+    private readonly int[] _enabledLocs = new int[_max_lights];
+    private readonly int[] _typeLocs = new int[_max_lights];
+    private readonly int[] _posLocs = new int[_max_lights];
+    private readonly int[] _targetLocs = new int[_max_lights];
+    private readonly int[] _colorLocs = new int[_max_lights];
+    private readonly int[] _distanceLocs = new int[_max_lights];
+    private readonly int[] _innerAngleLocs = new int[_max_lights];
+    private readonly int[] _outerAngleLocs = new int[_max_lights];
 
-        UpdateLightValues(light, shader);
-    }
-
-    public void UpdateLightValues(RaylibLight light, Shader shader)
-    {
-        Raylib.SetShaderValue(shader, light.EnabledLoc, light.Enabled ? 1 : 0, ShaderUniformDataType.Int);
-        Raylib.SetShaderValue(shader, light.TypeLoc, (int)light.Type, ShaderUniformDataType.Int);
-        Raylib.SetShaderValue(shader, light.PosLoc, light.Position, ShaderUniformDataType.Vec3);
-        Raylib.SetShaderValue(shader, light.TargetLoc, light.Target, ShaderUniformDataType.Vec3);
-        Vector4 colorVec = new(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f, light.Color.A / 255f);
-        Raylib.SetShaderValue(shader, light.ColorLoc, colorVec, ShaderUniformDataType.Vec4);
-    }
+    private readonly Dictionary<uint, int> _lightSlots = [];
+    private readonly LightDefinition?[] _lightSlotData = new LightDefinition?[_max_lights];
+    private uint _lightIdCounter = 0;
 
     public void InitWindow(int width, int height, string title)
     {
@@ -73,24 +65,26 @@ public class RaylibRenderer : IRenderer
 
         int ambientLoc = Raylib.GetShaderLocation(_lightShader, "ambient");
         Raylib.SetShaderValue(_lightShader, ambientLoc, new float[] { 0.2f, 0.2f, 0.2f, 1.0f }, ShaderUniformDataType.Vec4);
-
-        _sun = new()
+        
+        for (int i = 0; i < _max_lights; i++)
         {
-            Enabled = true,
-            Type = RaylibLightType.Directional,
-            Position = new Vector3(50, 100, 50),
-            Target = Vector3.Zero,
-            Color = Color.White
-        };
+            _enabledLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lights[{i}].enabled");
+            _typeLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lights[{i}].type");
+            _posLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lights[{i}].position");
+            _targetLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lights[{i}].target");
+            _colorLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lights[{i}].color");
+            _distanceLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lights[{i}].distance");
+            _innerAngleLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lights[{i}].innerAngle");
+            _outerAngleLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lights[{i}].outerAngle");
+        }
 
-        InitLight(ref _sun, _lightShader);
+        for (int i = 0; i < _max_lights; i++) UploadLightSlot(i, null);
     }
     public void CloseWindow() => Raylib.CloseWindow();
 
     public void BeginFrame()
     {
         Raylib.BeginDrawing();
-        UpdateLightValues(_sun, _lightShader);
     }
     public void EndFrame() => Raylib.EndDrawing();
 
@@ -212,7 +206,12 @@ public class RaylibRenderer : IRenderer
         return (bounds.Min + bounds.Max) * 0.5f;
     }
 
-    public void BeginMode(ReconCamera3D camera) => Raylib.BeginMode3D(camera.RawCamera);
+    public void BeginMode(ReconCamera3D camera)
+    {
+        unsafe { _lightShader.Locs[(int)ShaderLocationIndex.VectorView] = Raylib.GetShaderLocation(_lightShader, "viewPos"); }
+        Raylib.SetShaderValue(_lightShader, Raylib.GetShaderLocation(_lightShader, "viewPos"), camera.RawCamera.Position, ShaderUniformDataType.Vec3);
+        Raylib.BeginMode3D(camera.RawCamera);
+    }
     public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 size)
     {
         Model model = GetMaterializedModel(modelId, textureId);
@@ -284,6 +283,48 @@ public class RaylibRenderer : IRenderer
         bool success = _fontRegistry.TryGetValue(fontid, out Font font);
         if (!success) font = Raylib.GetFontDefault();
         return Raylib.MeasureTextEx(font, text, fontsize, 0);
+    }
+
+    public uint AddLight(LightDefinition def)
+    {
+        int slot = Array.IndexOf(_lightSlotData, null);
+        if (slot == -1) throw new InvalidOperationException($"maximum light count '{_max_lights}' reached");
+        _lightIdCounter++;
+        _lightSlots[_lightIdCounter] = slot;
+        _lightSlotData[slot] = def;
+        UploadLightSlot(slot, def);
+        return _lightIdCounter;
+    }
+
+    public void UpdateLight(uint lightId, LightDefinition def)
+    {
+        if (!_lightSlots.TryGetValue(lightId, out int slot)) return;
+        _lightSlotData[slot] = def;
+        UploadLightSlot(slot, def);
+    }
+
+    public void RemoveLight(uint lightId)
+    {
+        if (!_lightSlots.TryGetValue(lightId, out int slot)) return;
+        _lightSlotData[slot] = null;
+        _lightSlots.Remove(lightId);
+        UploadLightSlot(slot, null);
+    }
+
+    private void UploadLightSlot(int slot, LightDefinition? def)
+    {
+        bool enabled = def is { Enabled: true };
+        Raylib.SetShaderValue(_lightShader, _enabledLocs[slot], enabled ? 1 : 0, ShaderUniformDataType.Int);
+        if (!enabled) return;
+        var d = def!.Value;
+        Raylib.SetShaderValue(_lightShader, _typeLocs[slot], (int)d.Type, ShaderUniformDataType.Int);
+        Raylib.SetShaderValue(_lightShader, _posLocs[slot], d.Position, ShaderUniformDataType.Vec3);
+        Raylib.SetShaderValue(_lightShader, _targetLocs[slot], d.Direction, ShaderUniformDataType.Vec3);
+        Vector4 c = new(d.Color.Red, d.Color.Green, d.Color.Blue, d.Color.Alpha);
+        Raylib.SetShaderValue(_lightShader, _colorLocs[slot], c, ShaderUniformDataType.Vec4);
+        Raylib.SetShaderValue(_lightShader, _distanceLocs[slot], d.Distance, ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_lightShader, _innerAngleLocs[slot], float.DegreesToRadians(d.InnerAngle), ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(_lightShader, _outerAngleLocs[slot], float.DegreesToRadians(d.OuterAngle), ShaderUniformDataType.Float);
     }
 
     public Vector2 GetMousePosition() => Raylib.GetMousePosition();

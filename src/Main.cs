@@ -4,6 +4,7 @@ using ReconEngine.InputSystem;
 using ReconEngine.MeshSystem;
 using ReconEngine.NetworkingServer;
 using ReconEngine.RenderUtils;
+using ReconEngine.System3D;
 using ReconEngine.UISystem;
 using ReconEngine.WorldSystem;
 
@@ -45,6 +46,27 @@ internal static class ReconCore
         floor.Position = new(0, -4, 0);
         floor.Static = true;
         floor.Parent = MainWorld.Root;
+        _ = new ReconLight3D()
+        {
+            Position = new(0, 8, 0),
+            Enabled = true,
+            Distance = 16,
+            Parent = MainWorld.Root
+        };
+        _ = new ReconLight3D()
+        {
+            Position = new(8, 4, 0),
+            Enabled = true,
+            Distance = 8,
+            Parent = MainWorld.Root
+        };
+        _ = new ReconLight3D()
+        {
+            Position = new(-8, 4, 0),
+            Enabled = true,
+            Distance = 8,
+            Parent = MainWorld.Root
+        };
 
         while (!Renderer.ShouldClose())
         {
@@ -80,6 +102,10 @@ internal static class ReconCore
 
             Renderer.ClearBuffer();
 
+            /// RENDER CALL ///
+            MainWorld.Root.RenderStep(deltaTime, Renderer);
+            /// RENDER CALL ///
+            
             /// 3D ///
             Renderer.BeginMode(camera);
             MainWorld.WorldMeshRegistry.DrawAllMeshes(Renderer);
@@ -89,10 +115,6 @@ internal static class ReconCore
             /// INPUT SYSTEM ///
             ReconInputSystem.UpdateAll();
             /// INPUT SYSTEM ///
-
-            /// RENDER CALL ///
-            MainWorld.Root.RenderStep(deltaTime, Renderer);
-            /// RENDER CALL ///
 
             /// UI DRAW CALLS ///
             MainWorld.WorldGuiRegistry.DrawContainers(Renderer);

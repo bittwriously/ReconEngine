@@ -51,6 +51,11 @@ public interface IRenderer
     public Vector2 GetScreenSize();
     public Vector2 GetTextSize(string text, uint fontid, byte fontsize);
 
+    // light methods
+    public uint AddLight(LightDefinition light);
+    public void UpdateLight(uint lightId, LightDefinition light);
+    public void RemoveLight(uint lightId);
+
     // input methods
     public Vector2 GetMousePosition();
 }
