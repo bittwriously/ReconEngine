@@ -67,6 +67,7 @@ public enum CacheResetDirection
 public class ReconEntity : IUpdatable
 {
     public event EventHandler<ReconEntity?>? ParentChanged;
+    public event EventHandler<ReconEntity?>? AncestryChanged;
     public event EventHandler<ReconEntity>? ChildAdded;
     public event EventHandler<ReconEntity>? ChildRemoved;
 
@@ -96,6 +97,8 @@ public class ReconEntity : IUpdatable
             ResetCache(CacheResetDirection.Both);
             prevParent?.ResetCache(CacheResetDirection.Both);
             ParentChanged?.Invoke(this, prevParent);
+            AncestryChanged?.Invoke(this, this);
+            foreach (ReconEntity entity in Descendants) entity.AncestryChanged?.Invoke(this, this);
         }
     }
     public ReconWorld? CurrentWorld { get => _currentWorld; }
@@ -120,6 +123,20 @@ public class ReconEntity : IUpdatable
                 if (entity == null) yield break;
                 yield return entity;
                 currentId = entity._hierarchyData.SiblingAfter;
+            }
+        }
+    }
+    public IEnumerable<ReconEntity> Descendants
+    {
+        get
+        {
+            foreach (var child in Children)
+            {
+                yield return child;
+                foreach (var descendant in child.Descendants)
+                {
+                    yield return descendant;
+                }
             }
         }
     }
