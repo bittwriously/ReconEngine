@@ -3,10 +3,10 @@ using ReconEngine.RenderUtils;
 
 namespace ReconEngine.System3D;
 
-public class ReconLight3D : ReconEntity3D
+public abstract class ReconLight3D : ReconEntity3D
 {
-    private LightDefinition _definition = new();
-    private uint _lightId = uint.MaxValue;
+    protected LightDefinition _definition = new();
+    protected uint _lightId = uint.MaxValue;
     
     public Color4 Color
     {
@@ -25,6 +25,13 @@ public class ReconLight3D : ReconEntity3D
         get => _definition.Distance;
         set => _definition.Distance = value;
     }
+    
+    private Vector3 _baseDirection = Vector3.Zero;
+    public Vector3 Direction
+    {
+        get => _baseDirection;
+        set => _baseDirection = value;
+    }
 
     public new Vector3 Position
     {
@@ -32,15 +39,10 @@ public class ReconLight3D : ReconEntity3D
         set => _definition.Position = value;
     }
 
-    public new Quaternion Rotation
-    {
-        get => EulerToQuaternion(_definition.Direction);
-        set => _definition.Direction = QuaternionToEuler(value);
-    }
-
     public override void RenderStep(float deltaTime, IRenderer renderer)
     {
         base.RenderStep(deltaTime, renderer);
+        _definition.Direction = Direction = Vector3.Transform(_baseDirection, Rotation);
         renderer.UpdateLight(_lightId, _definition);
     }
     

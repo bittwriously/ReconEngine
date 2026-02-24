@@ -17,6 +17,6 @@ public struct LightDefinition()
     public Color4 Color = new();
     public bool Enabled = true;
     public float Distance = 16f;
-    public float InnerAngle;
-    public float OuterAngle;
+    public float InnerAngle = 15;
+    public float OuterAngle = 45;
 }

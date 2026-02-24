@@ -46,25 +46,12 @@ internal static class ReconCore
         floor.Position = new(0, -4, 0);
         floor.Static = true;
         floor.Parent = MainWorld.Root;
-        _ = new ReconLight3D()
+        _ = new SpotLight()
         {
             Position = new(0, 8, 0),
+            Direction = -Vector3.UnitY,
             Enabled = true,
             Distance = 16,
-            Parent = MainWorld.Root
-        };
-        _ = new ReconLight3D()
-        {
-            Position = new(8, 4, 0),
-            Enabled = true,
-            Distance = 8,
-            Parent = MainWorld.Root
-        };
-        _ = new ReconLight3D()
-        {
-            Position = new(-8, 4, 0),
-            Enabled = true,
-            Distance = 8,
             Parent = MainWorld.Root
         };
 
