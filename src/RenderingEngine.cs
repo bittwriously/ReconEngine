@@ -11,9 +11,26 @@ public enum ETextureSamplingMode
     Trilinear,
 }
 
+public enum LightingDebugMode
+{
+    None = 0,
+    Normals = 1,
+    UVs = 2,
+    BaseTexture = 3,
+    ShadowProjectedUVs = 4,
+    LightOnly = 5,
+    ShadowFactor = 6,
+    RawLightSpacePos = 7,
+    LightSpaceW = 8,
+    ShadowMapDepth = 9,
+    CascadeDebug = 10,
+}
+
 // renderer interface for swappable renderers
 public interface IRenderer
 {
+    public IShadowRenderer GetShadowMapRenderer();
+
     // generic functions
     public void BeginFrame();
     public void EndFrame();
@@ -36,6 +53,7 @@ public interface IRenderer
     // switch to 3d manager (used for game world)
     public void BeginMode(ReconCamera3D camera);
     public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 size);
+    public void DrawModelDepth(uint modelId, Vector3 position, Quaternion rotation, Vector3 size);
     public void EndMode();
 
     // 2d methods (used for guis)
@@ -58,4 +76,9 @@ public interface IRenderer
 
     // input methods
     public Vector2 GetMousePosition();
+
+    // debug methods
+    public void SetDebugMode(LightingDebugMode mode);
+    public LightingDebugMode CycleDebugMode();
+    public void DrawDebugOverlay();
 }

@@ -6,31 +6,11 @@ using ReconEngine.UISystem;
 
 namespace ReconEngine.RenderingEngines;
 
-public struct RaylibLight
-{
-    public bool Enabled;
-    public RaylibLightType Type;
-    public Vector3 Position;
-    public Vector3 Target;
-    public Color Color;
-
-    public int EnabledLoc;
-    public int TypeLoc;
-    public int PosLoc;
-    public int TargetLoc;
-    public int ColorLoc;
-}
-
-public enum RaylibLightType
-{
-    Directional = 0,
-    Point = 1
-}
-
 public class RaylibRenderer : IRenderer
 {
     private readonly Dictionary<uint, Model> _meshRegistry = [];
     private readonly Dictionary<uint, string> _meshPaths = [];
+    private readonly Dictionary<uint, (Vector3 scale, Vector3 centerOffset)> _modelMetaCache = [];
     private readonly Dictionary<(uint meshId, uint textureId), Model> _materializedModels = [];
     private uint _meshRegistryCounter = 0;
     private readonly Dictionary<uint, Texture2D> _textureRegistry = [];
@@ -39,7 +19,7 @@ public class RaylibRenderer : IRenderer
     private uint _fontRegistryCounter = 0;
     private Shader _lightShader;
 
-    private const int _max_lights = 256;
+    private const int _max_lights = 32;
     private readonly int[] _enabledLocs = new int[_max_lights];
     private readonly int[] _typeLocs = new int[_max_lights];
     private readonly int[] _posLocs = new int[_max_lights];
@@ -48,10 +28,24 @@ public class RaylibRenderer : IRenderer
     private readonly int[] _distanceLocs = new int[_max_lights];
     private readonly int[] _innerAngleLocs = new int[_max_lights];
     private readonly int[] _outerAngleLocs = new int[_max_lights];
+    private int _viewPosLoc;
+    private int _lightSpaceMatrixLoc;
+    private int _shadowMapLoc;
+
+    private readonly int[] _cascadeMatrixLocs = new int[4];
+    private readonly int[] _cascadeShadowMapLocs = new int[4];
+    private int _cascadeSplitsLoc;
 
     private readonly Dictionary<uint, int> _lightSlots = [];
     private readonly LightDefinition?[] _lightSlotData = new LightDefinition?[_max_lights];
     private uint _lightIdCounter = 0;
+
+    private int _debugModeLoc;
+    private LightingDebugMode _currentDebugMode = LightingDebugMode.None;
+
+    private readonly RaylibShadowRenderer _shadowRenderer = new();
+
+    public IShadowRenderer GetShadowMapRenderer() => _shadowRenderer;
 
     public void InitWindow(int width, int height, string title)
     {
@@ -60,12 +54,15 @@ public class RaylibRenderer : IRenderer
         Raylib.InitWindow(width, height, title);
         Raylib.DisableCursor();
 
-        _lightShader = Raylib.LoadShader("assets/shaders/lighting.vs", "assets/shaders/lighting.fs");
+        _lightShader = Raylib.LoadShader("assets/shaders/lighting.vert", "assets/shaders/lighting.frag");
         unsafe { _lightShader.Locs[(int)ShaderLocationIndex.VectorView] = Raylib.GetShaderLocation(_lightShader, "viewPos"); }
 
         int ambientLoc = Raylib.GetShaderLocation(_lightShader, "ambient");
         Raylib.SetShaderValue(_lightShader, ambientLoc, new float[] { 0.2f, 0.2f, 0.2f, 1.0f }, ShaderUniformDataType.Vec4);
-        
+
+        _debugModeLoc = Raylib.GetShaderLocation(_lightShader, "debugMode");
+        Raylib.SetShaderValue(_lightShader, _debugModeLoc, 0, ShaderUniformDataType.Int);
+
         for (int i = 0; i < _max_lights; i++)
         {
             _enabledLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lights[{i}].enabled");
@@ -79,23 +76,67 @@ public class RaylibRenderer : IRenderer
         }
 
         for (int i = 0; i < _max_lights; i++) UploadLightSlot(i, null);
+
+        _shadowRenderer.InitShadowMapShaders();
+        _shadowRenderer.CreateShadowMap();
+
+        for (int i = 0; i < 4; i++)
+        {
+            _cascadeMatrixLocs[i] = Raylib.GetShaderLocation(_lightShader, $"lightSpaceMatrices[{i}]");
+            _cascadeShadowMapLocs[i] = Raylib.GetShaderLocation(_lightShader, $"shadowMaps[{i}]");
+        }
+        _cascadeSplitsLoc = Raylib.GetShaderLocation(_lightShader, "cascadeSplits");
+
+        _viewPosLoc = Raylib.GetShaderLocation(_lightShader, "viewPos");
+        _lightSpaceMatrixLoc = Raylib.GetShaderLocation(_lightShader, "lightSpaceMatrix");
+        _shadowMapLoc = Raylib.GetShaderLocation(_lightShader, "shadowMap");
     }
     public void CloseWindow() => Raylib.CloseWindow();
 
+    public void SetDebugMode(LightingDebugMode mode)
+    {
+        _currentDebugMode = mode;
+        Raylib.SetShaderValue(_lightShader, _debugModeLoc, (int)mode, ShaderUniformDataType.Int);
+    }
+    public LightingDebugMode CycleDebugMode()
+    {
+        int next = ((int)_currentDebugMode + 1) % 11;
+        SetDebugMode((LightingDebugMode)next);
+        return _currentDebugMode;
+    }
+
     public void BeginFrame()
     {
+        if (Raylib.IsKeyPressed(KeyboardKey.F3))
+        {
+            var mode = CycleDebugMode();
+            Console.WriteLine($"Debug mode: {mode}");
+        }
         Raylib.BeginDrawing();
     }
-    public void EndFrame() => Raylib.EndDrawing();
+
+    public void EndFrame()
+    {
+        DrawDebugOverlay();
+        Raylib.EndDrawing();
+    }
 
     public bool ShouldClose() => Raylib.WindowShouldClose();
 
+    private void GenerateModelMetaCache(Model model, uint id)
+    {
+        BoundingBox bounds = Raylib.GetModelBoundingBox(model);
+        Vector3 modelSize = bounds.Max - bounds.Min;
+        Vector3 centerOffset = (bounds.Min + bounds.Max) * 0.5f;
+        _modelMetaCache.Add(id, (Vector3.One / modelSize, centerOffset)); // we save inverse size
+    }
     public uint RegisterMesh(string filepath)
     {
         Model model = Raylib.LoadModel(filepath);
         _meshRegistryCounter++;
         _meshRegistry.Add(_meshRegistryCounter, model);
         _meshPaths.Add(_meshRegistryCounter, filepath);
+        GenerateModelMetaCache(model, _meshRegistryCounter);
         return _meshRegistryCounter;
     }
     public uint RegisterTexture(string filepath)
@@ -140,7 +181,7 @@ public class RaylibRenderer : IRenderer
             model.Materials[i].Shader = _lightShader;
         }
     }
-    
+
     public void SetTextureSamplingMode(uint textureId, ETextureSamplingMode samplingMode)
     {
         if (!_textureRegistry.TryGetValue(textureId, out Texture2D texture)) return;
@@ -179,37 +220,19 @@ public class RaylibRenderer : IRenderer
         _fontRegistry.Remove(id);
     }
 
-    private static Vector3 GetScaleForSize(Model model, Vector3 targetSize, bool uniform)
-    {
-        BoundingBox bounds = Raylib.GetModelBoundingBox(model);
-        Vector3 modelSize = bounds.Max - bounds.Min;
-        if (uniform)
-        {
-            float scaleX = targetSize.X / modelSize.X;
-            float scaleY = targetSize.Y / modelSize.Y;
-            float scaleZ = targetSize.Z / modelSize.Z;
-            float uniformScale = MathF.Min(scaleX, MathF.Min(scaleY, scaleZ));
-            return new Vector3(uniformScale);
-        }
-        else
-        {
-            return new Vector3(
-                targetSize.X / modelSize.X,
-                targetSize.Y / modelSize.Y,
-                targetSize.Z / modelSize.Z
-            );
-        }
-    }
-    private static Vector3 GetModelCenter(Model model)
-    {
-        BoundingBox bounds = Raylib.GetModelBoundingBox(model);
-        return (bounds.Min + bounds.Max) * 0.5f;
-    }
-
     public void BeginMode(ReconCamera3D camera)
     {
-        unsafe { _lightShader.Locs[(int)ShaderLocationIndex.VectorView] = Raylib.GetShaderLocation(_lightShader, "viewPos"); }
-        Raylib.SetShaderValue(_lightShader, Raylib.GetShaderLocation(_lightShader, "viewPos"), camera.RawCamera.Position, ShaderUniformDataType.Vec3);
+        Raylib.SetShaderValue(_lightShader, _viewPosLoc, camera.RawCamera.Position, ShaderUniformDataType.Vec3);
+        Raylib.SetShaderValue(_lightShader, _cascadeSplitsLoc, _shadowRenderer.CascadeSplits, ShaderUniformDataType.Vec4);
+        for (int i = 0; i < 4; i++)
+        {
+            Raylib.SetShaderValueMatrix(_lightShader, _cascadeMatrixLocs[i],
+                _shadowRenderer.LightSpaceMatrices[i]);
+
+            Rlgl.ActiveTextureSlot(1 + i);
+            Rlgl.EnableTexture(_shadowRenderer.ShadowMaps[i].Texture.Id);
+            Raylib.SetShaderValue(_lightShader, _cascadeShadowMapLocs[i], 1 + i, ShaderUniformDataType.Int);
+        }
         Raylib.BeginMode3D(camera.RawCamera);
     }
     public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 size)
@@ -219,9 +242,29 @@ public class RaylibRenderer : IRenderer
         Vector3 axis = angle == 0
             ? Vector3.UnitY
             : Vector3.Normalize(new Vector3(rotation.X, rotation.Y, rotation.Z));
-        Vector3 scale = GetScaleForSize(model, size, false);
-        position -= GetModelCenter(model) * scale;
+        _modelMetaCache.TryGetValue(modelId, out (Vector3 scale, Vector3 centerOffset) value);
+        Vector3 scale = new(
+            size.X * value.scale.X,
+            size.Y * value.scale.Y,
+            size.Z * value.scale.Z
+        );
+        position -= value.centerOffset * scale;
         Raylib.DrawModelEx(model, position, axis, angle, scale, Color.White);
+    }
+    private readonly Shader[] _depthShaderSwapBuffer = new Shader[16];
+    public void DrawModelDepth(uint modelId, Vector3 position, Quaternion rotation, Vector3 size)
+    {
+        Model model = GetMaterializedModel(modelId, 0);
+        for (int i = 0; i < model.MaterialCount; i++)
+        unsafe {
+            _depthShaderSwapBuffer[i] = model.Materials[i].Shader;
+            model.Materials[i].Shader = _shadowRenderer.DepthShader;
+        }
+        DrawModel(modelId, 0, position, rotation, size);
+        for (int i = 0; i < model.MaterialCount; i++)
+        unsafe {
+            model.Materials[i].Shader = _depthShaderSwapBuffer[i];
+        }
     }
     public void EndMode() => Raylib.EndMode3D();
 
@@ -328,4 +371,24 @@ public class RaylibRenderer : IRenderer
     }
 
     public Vector2 GetMousePosition() => Raylib.GetMousePosition();
+
+    public void DrawDebugOverlay()
+    {
+        if (_currentDebugMode == LightingDebugMode.None) return;
+        string label = _currentDebugMode switch
+        {
+            LightingDebugMode.Normals => "DEBUG: Normals",
+            LightingDebugMode.UVs => "DEBUG: UVs",
+            LightingDebugMode.BaseTexture => "DEBUG: Base Texture (unlit)",
+            LightingDebugMode.ShadowProjectedUVs => "DEBUG: Shadow Projected UVs (R=U, G=V)",
+            LightingDebugMode.LightOnly => "DEBUG: Light Contribution",
+            LightingDebugMode.ShadowFactor => "DEBUG: Shadow Factor",
+            LightingDebugMode.RawLightSpacePos => "DEBUG: Raw LightSpace Pos (fract)",
+            LightingDebugMode.LightSpaceW => "DEBUG: LightSpace W component",
+            LightingDebugMode.ShadowMapDepth => "DEBUG: Shadow Map Depth at projected UV",
+            LightingDebugMode.CascadeDebug => "DEBUG: Cascade distance",
+            _ => "DEBUG: Unknown"
+        };
+        Raylib.DrawText(label, 10, 30, 20, Color.Yellow);
+    }
 }

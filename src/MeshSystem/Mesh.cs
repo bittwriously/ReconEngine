@@ -45,12 +45,13 @@ public class ReconMesh : PhysicsEntity
     public uint _textureId = 0;
     public string _texturePath = "";
 
-    public void Draw(IRenderer renderer)
+    public void Draw(IRenderer renderer, bool depth = false)
     {
         float alpha = (float)((ReconCore.RunningTime - _lastPhysTime) * _invPhysTime);
         Vector3 lerpedPos = ReconMath.Lerp(_lastPhysPos, Position, alpha);
         Quaternion lerpedRot = ReconMath.Lerp(_lastPhysRot, Rotation, alpha);
-        renderer.DrawModel(_meshId, _textureId, lerpedPos, lerpedRot, Size);
+        if (depth) renderer.DrawModelDepth(_meshId, lerpedPos, lerpedRot, Size);
+        else renderer.DrawModel(_meshId, _textureId, lerpedPos, lerpedRot, Size);
     }
 
     public override void PhysicsStep(float deltaTime)

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ReconEngine": {
+      "commandName": "Project",
+      "workingDirectory": "D:\\Projects\\ReconEngine"
+    }
+  }
+}

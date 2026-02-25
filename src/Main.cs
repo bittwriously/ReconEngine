@@ -3,6 +3,7 @@ using Raylib_cs;
 using ReconEngine.InputSystem;
 using ReconEngine.MeshSystem;
 using ReconEngine.NetworkingServer;
+using ReconEngine.RenderingEngines;
 using ReconEngine.RenderUtils;
 using ReconEngine.System3D;
 using ReconEngine.UISystem;
@@ -24,6 +25,7 @@ internal static class ReconCore
         ReconCamera3D camera = new(new Vector3(5.0f, 0.0f, 0.0f), Vector3.Zero);
 
         Renderer.InitWindow(800, 600, "ReconEngine");
+        IShadowRenderer shadowMapRenderer = Renderer.GetShadowMapRenderer();
 
         MainWorld = new("MainWorld");
 
@@ -34,24 +36,29 @@ internal static class ReconCore
         CurrentServer = new();
         CurrentServer.Start(18100);
 
-        ReconMesh mesh = new();
-        mesh.MeshId = "assets/models/utah_teapot_new.obj";
-        mesh.TextureId = "assets/textures/utahgrid.png";
-        mesh.Size = new(6.43f, 3.15f, 4.0f);
-        mesh.Parent = MainWorld.Root;
-        ReconMesh floor = new();
-        floor.MeshId = "assets/models/cube.obj";
-        floor.TextureId = "assets/textures/utahgrid.png";
-        floor.Size = new(16, 1, 16);
-        floor.Position = new(0, -4, 0);
-        floor.Static = true;
-        floor.Parent = MainWorld.Root;
-        _ = new SpotLight()
+        _ = new ReconMesh()
         {
-            Position = new(0, 8, 0),
-            Direction = -Vector3.UnitY,
+            MeshId = "assets/models/utah_teapot_new.obj",
+            TextureId = "assets/textures/utahgrid.png",
+            Size = new(6.43f, 3.15f, 4.0f),
+            Position = new(0, 0, 0),
+            //Rotation = Quaternion.CreateFromYawPitchRoll(MathF.PI*.5f, 0, 0),
+            Static = false,
+            Parent = MainWorld.Root,
+        };
+        _ = new ReconMesh()
+        {
+            MeshId = "assets/models/cube.obj",
+            TextureId = "assets/textures/utahgrid.png",
+            Size = new(16, 1, 16),
+            Position = new(0, -4, 0),
+            Static = true,
+            Parent = MainWorld.Root
+        };
+        var sun = new SunLight()
+        {
+            Direction = new(1, -1, 0),
             Enabled = true,
-            Distance = 16,
             Parent = MainWorld.Root
         };
 
@@ -62,7 +69,7 @@ internal static class ReconCore
             float deltaTime = Renderer.GetFrameTime();
             RunningTime += deltaTime;
 
-            /// PHYSICS ///
+            // PHYSICS //
             physicsAccumulator += MathF.Min(deltaTime, 0.25f);
             if (physicsAccumulator >= PhysicsFrametime)
             {
@@ -71,9 +78,8 @@ internal static class ReconCore
                 MainWorld.Root.PhysicsStep((float)PhysicsFrametime);
                 MainWorld.PhysicsEngine.Update((float)PhysicsFrametime);
             }
-            /// PHYSICS ///
-            
-            /// SERVER ///
+
+            // SERVER //
             if (CurrentServer != null)
             {
                 serverAccumulator += deltaTime;
@@ -83,31 +89,33 @@ internal static class ReconCore
                     CurrentServer.Update();
                 }
             }
-            /// SERVER ///
 
             Renderer.BeginFrame();
-
             Renderer.ClearBuffer();
 
-            /// RENDER CALL ///
+            // RENDER CALL //
             MainWorld.Root.RenderStep(deltaTime, Renderer);
-            /// RENDER CALL ///
-            
-            /// 3D ///
+
+            // SHADOWMAP //
+            shadowMapRenderer.UpdateSun(sun.Definition);
+            shadowMapRenderer.UpdateMatrices(camera.Position);
+            for (int i = 0; i < 4; i++)
+            {
+                shadowMapRenderer.BeginCascade(i);
+                MainWorld.WorldMeshRegistry.DrawAllMeshes(Renderer, true);
+                shadowMapRenderer.EndCascade();
+            }
+
+            // 3D //
             Renderer.BeginMode(camera);
             MainWorld.WorldMeshRegistry.DrawAllMeshes(Renderer);
             Renderer.EndMode();
-            /// 3D ///
 
-            /// INPUT SYSTEM ///
+            // INPUT SYSTEM //
             ReconInputSystem.UpdateAll();
-            /// INPUT SYSTEM ///
 
-            /// UI DRAW CALLS ///
+            // UI DRAW CALLS //
             MainWorld.WorldGuiRegistry.DrawContainers(Renderer);
-            /// UI DRAW CALLS ///
-
-            Raylib.DrawFPS(16, 16);
 
             Renderer.EndFrame();
         }

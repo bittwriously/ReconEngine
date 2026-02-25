@@ -16,8 +16,8 @@ public class ReconMeshRegistry
         _meshes.Remove(mesh);
     }
 
-    public void DrawAllMeshes(IRenderer renderer)
+    public void DrawAllMeshes(IRenderer renderer, bool depthRender = false)
     {
-        foreach (ReconMesh mesh in _meshes) mesh.Draw(renderer);
+        foreach (ReconMesh mesh in _meshes) mesh.Draw(renderer, depthRender);
     }
 }

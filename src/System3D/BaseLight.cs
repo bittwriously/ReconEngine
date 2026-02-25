@@ -7,7 +7,7 @@ public abstract class ReconLight3D : ReconEntity3D
 {
     protected LightDefinition _definition = new();
     protected uint _lightId = uint.MaxValue;
-    
+
     public Color4 Color
     {
         get => _definition.Color;
@@ -25,13 +25,15 @@ public abstract class ReconLight3D : ReconEntity3D
         get => _definition.Distance;
         set => _definition.Distance = value;
     }
-    
+
     private Vector3 _baseDirection = Vector3.Zero;
     public Vector3 Direction
     {
         get => _baseDirection;
         set => _baseDirection = value;
     }
+
+    public LightDefinition Definition => _definition;
 
     public new Vector3 Position
     {
@@ -45,7 +47,7 @@ public abstract class ReconLight3D : ReconEntity3D
         _definition.Direction = Direction = Vector3.Transform(_baseDirection, Rotation);
         renderer.UpdateLight(_lightId, _definition);
     }
-    
+
     public override void Ready()
     {
         base.Ready();
