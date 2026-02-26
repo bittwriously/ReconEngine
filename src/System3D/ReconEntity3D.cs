@@ -14,7 +14,7 @@ public class ReconEntity3D : ReconEntity
         set => Rotation = EulerToQuaternion(value);
     }
 
-    public Matrix4x4 LocalTransform =>
+    public Matrix4x4 Transform =>
         Matrix4x4.CreateFromQuaternion(Rotation) *
         Matrix4x4.CreateTranslation(Position);
 
