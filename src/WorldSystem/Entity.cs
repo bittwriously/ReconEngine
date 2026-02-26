@@ -104,12 +104,14 @@ public class ReconEntity : IUpdatable
     public ReconWorld? CurrentWorld { get => _currentWorld; }
     public string Name
     {
-        get { return _name; }
+        get => _name;
         set
         {
+            if (_name == value) return;
             _name = value;
             _namehash = value.GetHashCode(StringComparison.CurrentCulture);
             ResetCache(CacheResetDirection.Both);
+            FirePropertyChanged(nameof(Name));
         }
     }
     public IEnumerable<ReconEntity> Children
@@ -144,7 +146,12 @@ public class ReconEntity : IUpdatable
     {
         get { return GetType().Name; }
     }
-    public bool IsActive = true;
+    private bool _isActive = true;
+    public bool IsActive
+    {
+        get => _isActive;
+        set => SetProperty(ref _isActive, value, nameof(IsActive));
+    }
 
     public int HierarchyDepth
     {
@@ -363,5 +370,30 @@ public class ReconEntity : IUpdatable
             clone.AddChild(childClone);
         }
         return clone;
+    }
+
+    private readonly Dictionary<string, Action> _propertySignals = new();
+
+    public ref Action GetPropertyChangeAction(string propertyName)
+    {
+        if (!_propertySignals.TryGetValue(propertyName, out _))
+            _propertySignals[propertyName] = delegate { };
+
+        return ref System.Runtime.CompilerServices.Unsafe.AsRef(
+            in _propertySignals.GetValueRefOrNullRef(propertyName));
+    }
+
+    protected bool SetProperty<T>(ref T field, T value, string propertyName)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        FirePropertyChanged(propertyName);
+        return true;
+    }
+
+    protected void FirePropertyChanged(string propertyName)
+    {
+        if (_propertySignals.TryGetValue(propertyName, out var signal))
+            signal?.Invoke();
     }
 }
