@@ -12,64 +12,51 @@ using ReconEngine.WorldSystem;
 
 namespace ReconEngine;
 
+public sealed class ReconEngineConfig
+{
+    public int WindowWidth = 800;
+    public int WindowHeight = 600;
+    public string WindowTitle = "ReconEngine";
+    public double PhysicsFramerate = 20.0;
+    public IRenderer? Renderer;
+    public ISoundProvider? SoundProvider;
+}
+
 public static class ReconCore
 {
-    public static IRenderer Renderer = new RaylibRenderer();
-    public static ISoundProvider SoundProvider = new MiniAudioSoundProvider();
-    public static ReconWorld MainWorld = null!;
-    public static ReconNetCatServer? CurrentServer = null;
+    public static IRenderer Renderer { get; private set; } = null!;
+    public static ISoundProvider SoundProvider { get; private set; } = null!;
+    public static ReconWorld MainWorld { get; private set; } = null!;
     public static double RunningTime { get; private set; } = 0.0;
-    public static readonly double PhysicsFrametime = 1.0 / 20.0;
+    public static double PhysicsFrametime { get; private set; } = 1.0 / 20.0;
 
-    [STAThread]
-    public static void Main()
+    public static event Action? Ready;
+    public static event Action<float>? Update;
+    public static event Action<float>? PhysicsUpdate;
+    public static event Action<float>? Render;
+    public static event Action? Shutdown;
+
+    
+    public static void Run(ReconEngineConfig? config = null)
     {
-        ReconCamera3D camera = new(new Vector3(5.0f, 0.0f, 0.0f), Vector3.Zero);
+        config ??= new ReconEngineConfig();
+        PhysicsFrametime = 1.0 / config.PhysicsFramerate;
 
-        Renderer.InitWindow(800, 600, "ReconEngine");
+        Renderer      = config.Renderer      ?? new RaylibRenderer();
+        SoundProvider = config.SoundProvider ?? new MiniAudioSoundProvider();
+
+        Renderer.InitWindow(config.WindowWidth, config.WindowHeight, config.WindowTitle);
         SoundProvider.Initialize();
+
         IShadowRenderer shadowMapRenderer = Renderer.GetShadowMapRenderer();
 
-        MainWorld = new("MainWorld");
+        MainWorld = new ReconWorld("MainWorld");
+
+        Ready?.Invoke();
+
+        ReconCamera3D camera = _camera ?? new ReconCamera3D(new Vector3(5f, 5f, 5f), Vector3.Zero);
 
         double physicsAccumulator = 0.0;
-        double serverAccumulator = 0.0;
-
-        // create a new server for testing!
-        CurrentServer = new();
-        CurrentServer.Start(18100);
-
-        _ = new ReconMesh()
-        {
-            MeshId = "assets/models/utah_teapot_new.obj",
-            TextureId = "assets/textures/utahgrid.png",
-            Size = new(6.43f, 3.15f, 4.0f),
-            Position = new(0, 0, 0),
-            //Rotation = Quaternion.CreateFromYawPitchRoll(MathF.PI*.5f, 0, 0),
-            Static = false,
-            Parent = MainWorld.Root,
-        };
-        _ = new ReconMesh()
-        {
-            MeshId = "assets/models/cube.obj",
-            TextureId = "assets/textures/utahgrid.png",
-            Size = new(16, 1, 16),
-            Position = new(0, -4, 0),
-            Static = true,
-            Parent = MainWorld.Root
-        };
-        (new ReconSound3D()
-        {
-            Sound = "assets/sounds/danteh.mp3",
-            IsLooped = true,
-            Parent = MainWorld.Root,
-        }).Play();
-        var sun = new SunLight()
-        {
-            Direction = new(1, -1, 0),
-            Enabled = true,
-            Parent = MainWorld.Root
-        };
 
         while (!Renderer.ShouldClose())
         {
@@ -78,38 +65,30 @@ public static class ReconCore
             float deltaTime = Renderer.GetFrameTime();
             RunningTime += deltaTime;
 
-            // PHYSICS //
+            // --- PHYSICS ---
             physicsAccumulator += MathF.Min(deltaTime, 0.25f);
             if (physicsAccumulator >= PhysicsFrametime)
             {
-                // do physics here
                 physicsAccumulator -= PhysicsFrametime;
-                MainWorld.Root.PhysicsStep((float)PhysicsFrametime);
-                MainWorld.PhysicsEngine.Update((float)PhysicsFrametime);
+                float physDt = (float)PhysicsFrametime;
+                MainWorld.Root.PhysicsStep(physDt);
+                MainWorld.PhysicsEngine.Update(physDt);
+                PhysicsUpdate?.Invoke(physDt);
             }
 
-            // SERVER //
-            if (CurrentServer != null)
-            {
-                serverAccumulator += deltaTime;
-                if (serverAccumulator > CurrentServer.UPDATE_TIME)
-                {
-                    serverAccumulator -= CurrentServer.UPDATE_TIME;
-                    CurrentServer.Update();
-                }
-            }
+            // --- UPDATE ---
+            Update?.Invoke(deltaTime);
 
-            // AUDIO UPDATE //
+            // --- AUDIO ---
             SoundProvider.Update(deltaTime, camera.Position, Vector3.Normalize(camera.Target - camera.Position));
 
+            // --- RENDER ---
             Renderer.BeginFrame();
             Renderer.ClearBuffer();
 
-            // RENDER CALL //
             MainWorld.Root.RenderStep(deltaTime, Renderer);
 
-            // SHADOWMAP //
-            shadowMapRenderer.UpdateSun(sun.Definition);
+            Renderer.GetShadowMapRenderer().UpdateSun(_sun.Definition);
             shadowMapRenderer.UpdateMatrices(camera.Position);
             for (int i = 0; i < 4; i++)
             {
@@ -118,21 +97,30 @@ public static class ReconCore
                 shadowMapRenderer.EndCascade();
             }
 
-            // 3D //
             Renderer.BeginMode(camera);
             MainWorld.WorldMeshRegistry.DrawAllMeshes(Renderer);
             Renderer.EndMode();
 
-            // INPUT SYSTEM //
             ReconInputSystem.UpdateAll();
-
-            // UI DRAW CALLS //
             MainWorld.WorldGuiRegistry.DrawContainers(Renderer);
+
+            Render?.Invoke(deltaTime);
 
             Renderer.EndFrame();
         }
 
+        Shutdown?.Invoke();
         Renderer.CloseWindow();
         SoundProvider.Deinitialize();
+    }
+
+    private static ReconCamera3D? _camera;
+    public static void SetCamera(ReconCamera3D camera) => _camera = camera;
+
+    private static SunLight? _sun;
+    public static void SetSun(SunLight sun)
+    {
+        _sun = sun;
+        Renderer.GetShadowMapRenderer().UpdateSun(sun.Definition);
     }
 }

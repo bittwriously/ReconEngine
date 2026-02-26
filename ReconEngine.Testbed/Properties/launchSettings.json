@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ReconEngine.Testbed": {
+      "commandName": "Project",
+      "workingDirectory": "D:\\Projects\\ReconEngine"
+    }
+  }
+}
