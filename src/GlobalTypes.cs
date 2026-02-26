@@ -45,12 +45,21 @@ public static class ReconMath
     }
 }
 
-public struct Color4(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
+public struct Color4
 {
-    public float Red = r;
-    public float Green = g;
-    public float Blue = b;
-    public float Alpha = a;
+    public float Red;
+    public float Green;
+    public float Blue;
+    public float Alpha;
+
+    public Color4(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
+    {
+        Red = r; Green = g; Blue = b; Alpha = a;
+    }
+    public static Color4 FromRGB(int r = 255, int g = 255, int b = 255, int a = 255)
+    {
+        return new Color4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
+    }
 
     public readonly Color4 Lerp(Color4 goal, float alpha)
     {

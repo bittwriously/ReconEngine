@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="3.0.0" />
     <PackageReference Include="Jitter2" Version="2.7.8" />
     <PackageReference Include="LiteNetLib" Version="2.0.2" />
     <PackageReference Include="Raylib-cs" Version="7.0.2" />

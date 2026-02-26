@@ -133,6 +133,11 @@ public class RaylibRenderer : IRenderer
     public uint RegisterMesh(string filepath)
     {
         Model model = Raylib.LoadModel(filepath);
+        if (model.MeshCount == 0)
+        {
+            Console.WriteLine($"FAILED TO LOAD MODEL: {filepath}");
+            return 0;
+        }
         _meshRegistryCounter++;
         _meshRegistry.Add(_meshRegistryCounter, model);
         _meshPaths.Add(_meshRegistryCounter, filepath);
@@ -142,6 +147,11 @@ public class RaylibRenderer : IRenderer
     public uint RegisterTexture(string filepath)
     {
         Texture2D texture = Raylib.LoadTexture(filepath);
+        if (texture.Id == 0)
+        {
+            Console.WriteLine($"FAILED TO LOAD TEXTURE: {filepath}");
+            return 0;
+        }
         Raylib.SetTextureWrap(texture, TextureWrap.Clamp);
         Raylib.SetTextureFilter(texture, TextureFilter.Trilinear);
         _textureRegistryCounter++;
@@ -151,6 +161,11 @@ public class RaylibRenderer : IRenderer
     public uint RegisterFont(string filepath)
     {
         Font font = Raylib.LoadFont(filepath);
+        if (font.GlyphCount == 0)
+        {
+            Console.WriteLine($"FAILED TO LOAD FONT: {filepath}");
+            return 0;
+        }
         _fontRegistryCounter++;
         _fontRegistry.Add(_fontRegistryCounter, font);
         return _fontRegistryCounter;

@@ -36,6 +36,7 @@ public static class DynamicResouceLoader
                 newId = ReconCore.Renderer.RegisterFont(path);
                 break;
             case ResourceAssetType.Sound:
+                newId = ReconCore.SoundProvider.LoadSound(path);
                 break;
             default: break;
         }

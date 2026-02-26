@@ -1,19 +1,21 @@
 using System.Numerics;
-using Raylib_cs;
 using ReconEngine.InputSystem;
 using ReconEngine.MeshSystem;
 using ReconEngine.NetworkingServer;
 using ReconEngine.RenderingEngines;
 using ReconEngine.RenderUtils;
+using ReconEngine.SoundSystem;
+using ReconEngine.SoundSystem.SoundProviders;
 using ReconEngine.System3D;
 using ReconEngine.UISystem;
 using ReconEngine.WorldSystem;
 
 namespace ReconEngine;
 
-internal static class ReconCore
+public static class ReconCore
 {
-    public static IRenderer Renderer = new RenderingEngines.RaylibRenderer();
+    public static IRenderer Renderer = new RaylibRenderer();
+    public static ISoundProvider SoundProvider = new MiniAudioSoundProvider();
     public static ReconWorld MainWorld = null!;
     public static ReconNetCatServer? CurrentServer = null;
     public static double RunningTime { get; private set; } = 0.0;
@@ -25,6 +27,7 @@ internal static class ReconCore
         ReconCamera3D camera = new(new Vector3(5.0f, 0.0f, 0.0f), Vector3.Zero);
 
         Renderer.InitWindow(800, 600, "ReconEngine");
+        SoundProvider.Initialize();
         IShadowRenderer shadowMapRenderer = Renderer.GetShadowMapRenderer();
 
         MainWorld = new("MainWorld");
@@ -55,6 +58,12 @@ internal static class ReconCore
             Static = true,
             Parent = MainWorld.Root
         };
+        (new ReconSound3D()
+        {
+            Sound = "assets/sounds/danteh.mp3",
+            IsLooped = true,
+            Parent = MainWorld.Root,
+        }).Play();
         var sun = new SunLight()
         {
             Direction = new(1, -1, 0),
@@ -90,6 +99,9 @@ internal static class ReconCore
                 }
             }
 
+            // AUDIO UPDATE //
+            SoundProvider.Update(deltaTime, camera.Position, Vector3.Normalize(camera.Target - camera.Position));
+
             Renderer.BeginFrame();
             Renderer.ClearBuffer();
 
@@ -121,5 +133,6 @@ internal static class ReconCore
         }
 
         Renderer.CloseWindow();
+        SoundProvider.Deinitialize();
     }
 }
