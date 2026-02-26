@@ -9,11 +9,11 @@ public class RaylibShadowRenderer : IShadowRenderer
     internal Shader DepthShader;
     private int _lightSpaceLoc;
 
-    public static readonly int[] CascadeResolutions = [2048, 2048, 1024, 1024];
+    public static readonly int[] CascadeResolutions = [2048, 2048, 1024, 512];
 
     public const int CASCADE_COUNT = 4;
     public int CascadeCount => CASCADE_COUNT;
-    public float[] CascadeSplits => [10f, 40f, 100f, 250f];
+    public float[] CascadeSplits => [16f, 64f, 128f, 256f];
     public Matrix4x4[] LightSpaceMatrices => _lightSpaceMatrices;
     public RenderTexture2D[] ShadowMaps => _shadowMaps;
 
