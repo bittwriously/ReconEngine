@@ -1,13 +1,15 @@
 using System.Numerics;
+using MessagePack;
 
 namespace ReconEngine.AnimationSystem;
 
 // transform for a single motor
+[MessagePackObject]
 public struct MotorKeyframe
 {
-    public string MotorName;
-    public Vector3 Position;
-    public Quaternion Rotation;
+    [Key(0)] public string MotorName;
+    [Key(1)] public Vector3 Position;
+    [Key(2)] public Quaternion Rotation;
 }
 
 public enum EasingStyle
@@ -20,19 +22,21 @@ public enum EasingStyle
 }
 
 // a snapshot of all motors in a point of time
+[MessagePackObject]
 public class Keyframe
 {
-    public float Time;
-    public EasingStyle Easing = EasingStyle.Linear;
-    public Dictionary<string, MotorKeyframe> Motors = [];
+    [Key(0)] public float Time;
+    [Key(1)] public EasingStyle Easing = EasingStyle.Linear;
+    [Key(2)] public Dictionary<string, MotorKeyframe> Motors = [];
 }
 
+[MessagePackObject]
 public class AnimationClip
 {
-    public string Name = "";
-    public float Length;
-    public bool Looped;
-    public List<Keyframe> Keyframes = [];
+    [Key(0)] public string Name = "";
+    [Key(1)] public float Length;
+    [Key(2)] public bool Looped;
+    [Key(3)] public List<Keyframe> Keyframes = [];
 
     public (Keyframe? prev, Keyframe? next, float t) SampleAt(float time)
     {
@@ -61,18 +65,18 @@ public class AnimationClip
         _ => t
     };
 
-    private const float _Inv2_75 = 1f / 2.75f;       // ≈ 0.36364
-    private const float _Inv2_75a = 1.5f / 2.75f;    // ≈ 0.54545
-    private const float _Inv2_75b = 2.25f / 2.75f;   // ≈ 0.81818
-    private const float _Inv2_75c = 2.625f / 2.75f;  // ≈ 0.95455
+    private const float _inv2_75 = 1f / 2.75f;       // ≈ 0.36364
+    private const float _inv2_75a = 1.5f / 2.75f;    // ≈ 0.54545
+    private const float _inv2_75b = 2.25f / 2.75f;   // ≈ 0.81818
+    private const float _inv2_75c = 2.625f / 2.75f;  // ≈ 0.95455
 
     private static float BounceEase(float t)
     {
         t = 1f - t;
-        if (t < _Inv2_75) return 1f - 7.5625f * t * t;
-        if (t < _Inv2_75a) { t -= _Inv2_75a; return 1f - (7.5625f * t * t + 0.75f); }
-        if (t < _Inv2_75b) { t -= _Inv2_75b; return 1f - (7.5625f * t * t + 0.9375f); }
-        t -= _Inv2_75c;
+        if (t < _inv2_75) return 1f - 7.5625f * t * t;
+        if (t < _inv2_75a) { t -= _inv2_75a; return 1f - (7.5625f * t * t + 0.75f); }
+        if (t < _inv2_75b) { t -= _inv2_75b; return 1f - (7.5625f * t * t + 0.9375f); }
+        t -= _inv2_75c;
         return 1f - (7.5625f * t * t + 0.984375f);
     }
 
