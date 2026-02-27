@@ -47,6 +47,9 @@ public static class ReconMath
 
 public struct Color4
 {
+    public readonly static Color4 White = new(1, 1, 1, 1);
+    public readonly static Color4 Black = new(0, 0, 0, 1);
+
     public float Red;
     public float Green;
     public float Blue;
@@ -59,6 +62,11 @@ public struct Color4
     public static Color4 FromRGB(int r = 255, int g = 255, int b = 255, int a = 255)
     {
         return new Color4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
+    }
+
+    public float[] AsVec4()
+    {
+        return [Red, Green, Blue, Alpha];
     }
 
     public readonly Color4 Lerp(Color4 goal, float alpha)

@@ -78,7 +78,6 @@ public static class ReconCore
 
             // --- RENDER ---
             Renderer.BeginFrame();
-            Renderer.ClearBuffer();
 
             MainWorld.Root.RenderStep(deltaTime, Renderer);
 

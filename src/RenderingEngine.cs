@@ -27,6 +27,14 @@ public enum LightingDebugMode
     CascadeDebug = 10,
 }
 
+public enum SkyboxType
+{
+    Cubemap = 0,
+    HDRI = 1,
+    SolidColor = 2,
+    Gradient = 3,
+}
+
 // renderer interface for swappable renderers
 public interface IRenderer
 {
@@ -78,6 +86,15 @@ public interface IRenderer
     // input methods
     public Vector2 GetMousePosition();
 
+    // lighting properties
+    public void SetAmbientColor(Color4 ambient);
+    public Color4 GetAmbientColor();
+    public void LoadTextureSkybox(SkyboxType type, string texture);
+    public void LoadSolidSkybox(Color4 color);
+    public void LoadGradientSkybox(Color4 top, Color4 bottom);
+    public (SkyboxType type, string texture) GetSkybox();
+    public void EnableHDRIGammaCorrection(bool enabled);
+    
     // debug methods
     public void SetDebugMode(LightingDebugMode mode);
     public LightingDebugMode CycleDebugMode();

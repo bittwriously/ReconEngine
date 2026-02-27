@@ -1,3 +1,4 @@
+using ReconEngine.Entities;
 using ReconEngine.MeshSystem;
 using ReconEngine.PhysicsHandler;
 using ReconEngine.PhysicsHandler.LibraryWrappers;
@@ -15,6 +16,7 @@ public class ReconWorld
     public ReconMeshRegistry WorldMeshRegistry = new();
     public IPhysicsEngine PhysicsEngine = new Jitter2World();
     public ReconCamera3D? CurrentCamera = null;
+    public WorldEnvironment? Environment = null;
 
     public ReconWorld(string name = "ReconWorld")
     {

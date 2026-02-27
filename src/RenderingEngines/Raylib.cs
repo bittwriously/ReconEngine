@@ -1,9 +1,9 @@
-using System.Collections;
 using System.Numerics;
 using Raylib_cs;
 using ReconEngine.RenderUtils;
 using ReconEngine.System3D;
 using ReconEngine.UISystem;
+using StbImageSharp;
 
 namespace ReconEngine.RenderingEngines;
 
@@ -32,6 +32,7 @@ public class RaylibRenderer : IRenderer
     private int _viewPosLoc;
     private int _lightSpaceMatrixLoc;
     private int _shadowMapLoc;
+    private int _ambientLoc;
 
     private readonly int[] _cascadeMatrixLocs = new int[4];
     private readonly int[] _cascadeShadowMapLocs = new int[4];
@@ -60,8 +61,8 @@ public class RaylibRenderer : IRenderer
         _lightShader = Raylib.LoadShader("assets/shaders/lighting.vert", "assets/shaders/lighting.frag");
         unsafe { _lightShader.Locs[(int)ShaderLocationIndex.VectorView] = Raylib.GetShaderLocation(_lightShader, "viewPos"); }
 
-        int ambientLoc = Raylib.GetShaderLocation(_lightShader, "ambient");
-        Raylib.SetShaderValue(_lightShader, ambientLoc, new float[] { 0.2f, 0.2f, 0.2f, 1.0f }, ShaderUniformDataType.Vec4);
+        _ambientLoc = Raylib.GetShaderLocation(_lightShader, "ambient");
+        SetAmbientColor(new Color4(0.2f, 0.2f, 0.2f, 1.0f));
 
         _debugModeLoc = Raylib.GetShaderLocation(_lightShader, "debugMode");
         Raylib.SetShaderValue(_lightShader, _debugModeLoc, 0, ShaderUniformDataType.Int);
@@ -93,6 +94,8 @@ public class RaylibRenderer : IRenderer
         _viewPosLoc = Raylib.GetShaderLocation(_lightShader, "viewPos");
         _lightSpaceMatrixLoc = Raylib.GetShaderLocation(_lightShader, "lightSpaceMatrix");
         _shadowMapLoc = Raylib.GetShaderLocation(_lightShader, "shadowMap");
+
+        LoadSkyboxShaders();
     }
     public void CloseWindow() => Raylib.CloseWindow();
 
@@ -116,6 +119,14 @@ public class RaylibRenderer : IRenderer
             Console.WriteLine($"Debug mode: {mode}");
         }
         Raylib.BeginDrawing();
+        if (_skyboxType == SkyboxType.SolidColor)
+        {
+            Raylib.ClearBackground(new Color(
+                _skyboxColor1.Red * 255.0f,
+                _skyboxColor1.Green * 255.0f,
+                _skyboxColor1.Blue * 255.0f
+            ));
+        } else { Raylib.ClearBackground(Color.Black); }
     }
 
     public void EndFrame()
@@ -253,6 +264,31 @@ public class RaylibRenderer : IRenderer
         }
         _camera = new(camera.Position, camera.Target, camera.Up, camera.FovY, CameraProjection.Perspective);
         Raylib.BeginMode3D(_camera);
+
+        if (_skyboxType == SkyboxType.Cubemap || _skyboxType == SkyboxType.HDRI)
+        {
+            Rlgl.DisableDepthMask();
+            Rlgl.DisableBackfaceCulling();
+
+            Raylib.DrawModel(_skyboxModel, Vector3.Zero, 1f, Color.White);
+
+            Rlgl.EnableBackfaceCulling();
+            Rlgl.EnableDepthMask();
+        } else if (_skyboxType == SkyboxType.Gradient)
+        {
+            Rlgl.DisableDepthTest();
+            Raylib.BeginShaderMode(_gradientShader);
+
+            Rlgl.Begin(DrawMode.Quads);
+            Rlgl.Vertex2f(-1f, -1f);
+            Rlgl.Vertex2f(1f, -1f);
+            Rlgl.Vertex2f(1f, 1f);
+            Rlgl.Vertex2f(-1f, 1f);
+            Rlgl.End();
+
+            Raylib.EndShaderMode();
+            Rlgl.EnableDepthTest();
+        }
     }
     public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 size)
     {
@@ -390,6 +426,160 @@ public class RaylibRenderer : IRenderer
     }
 
     public Vector2 GetMousePosition() => Raylib.GetMousePosition();
+
+    private Color4 _ambientColor;
+    private SkyboxType _skyboxType = SkyboxType.SolidColor;
+    private string _skyboxTexture = "";
+    private Color4 _skyboxColor1 = Color4.Black;
+    private Color4 _skyboxColor2 = Color4.Black; 
+
+    private Shader _gradientShader;
+    private int _gradientBottomColorLoc;
+    private int _gradientTopColorLoc;
+
+    private Model _skyboxModel;
+
+    private Shader _skyboxShaderHDRI;
+    private int _envMapLocHDRI;
+    private int _vFlippedLocHDRI;
+    private int _doGammaLocHDRI;
+
+    private Shader _skyboxShaderCUBE;
+    private int _envMapLocCUBE;
+    private int _vFlippedLocCUBE;
+    private int _doGammaLocCUBE;
+
+    private Texture2D _cubemap;
+
+    private bool _gammaEnabled = false; // only applies to HDRI skyboxes
+
+    public void SetAmbientColor(Color4 ambient)
+    {
+        _ambientColor = ambient;
+        Raylib.SetShaderValue(_lightShader, _ambientLoc, ambient.AsVec4(), ShaderUniformDataType.Vec4);
+    }
+    public Color4 GetAmbientColor() => _ambientColor;
+
+    public void EnableHDRIGammaCorrection(bool enabled) => _gammaEnabled = enabled;
+
+    public void LoadTextureSkybox(SkyboxType type, string texture)
+    {
+        _skyboxType = type;
+        _skyboxTexture = texture;
+        switch (type)
+        {
+            case SkyboxType.Cubemap:
+                LoadCubemapSkybox();
+                break;
+
+            case SkyboxType.HDRI:
+                LoadHDRI();
+                break;
+
+            default:
+                Console.WriteLine("[RAYLIB:Renderer] Tried to load Solid/Gradient skybox with the texture loader");
+                break;
+        }
+    }
+
+    public void LoadSolidSkybox(Color4 color)
+    {
+        _skyboxColor1 = color;
+        _skyboxType = SkyboxType.SolidColor;
+    }
+    public void LoadGradientSkybox(Color4 top, Color4 bottom)
+    {
+        _skyboxColor1 = top;
+        _skyboxColor2 = bottom;
+        _skyboxType = SkyboxType.Gradient;
+        Raylib.SetShaderValue(_gradientShader, _gradientTopColorLoc, top.AsVec4(), ShaderUniformDataType.Vec4);
+        Raylib.SetShaderValue(_gradientShader, _gradientBottomColorLoc, bottom.AsVec4(), ShaderUniformDataType.Vec4);
+    }
+
+    public (SkyboxType type, string texture) GetSkybox() => (_skyboxType, _skyboxTexture);
+    public (Color4 top, Color4 bottom) GetSkyboxColors() => (_skyboxColor1, _skyboxColor2);
+
+    private void LoadSkyboxShaders()
+    {
+        _skyboxShaderHDRI = Raylib.LoadShader("assets/shaders/skybox.vert", "assets/shaders/skybox_hdri.frag");
+        _envMapLocHDRI = Raylib.GetShaderLocation(_skyboxShaderHDRI, "envMap");
+        _vFlippedLocHDRI = Raylib.GetShaderLocation(_skyboxShaderHDRI, "vFlipped");
+        _doGammaLocHDRI = Raylib.GetShaderLocation(_skyboxShaderHDRI, "doGamma");
+
+        _skyboxShaderCUBE = Raylib.LoadShader("assets/shaders/skybox.vert", "assets/shaders/skybox_cubemap.frag");
+        _envMapLocCUBE = Raylib.GetShaderLocation(_skyboxShaderCUBE, "envMap");
+        _vFlippedLocCUBE = Raylib.GetShaderLocation(_skyboxShaderCUBE, "vFlipped");
+        _doGammaLocCUBE = Raylib.GetShaderLocation(_skyboxShaderCUBE, "doGamma");
+
+        const string gradVs = @"
+            #version 330
+            in vec2 vertexPosition;
+            out vec2 fragTexCoord;
+            void main() {
+                fragTexCoord = vertexPosition * 0.5 + 0.5;
+                gl_Position = vec4(vertexPosition, 0.0, 1.0);
+            }";
+        const string gradFs = @"
+            #version 330
+            in vec2 fragTexCoord;
+            uniform vec4 topColor;
+            uniform vec4 bottomColor;
+            out vec4 finalColor;
+            void main() {
+                finalColor = mix(bottomColor, topColor, fragTexCoord.y);
+            }";
+        _gradientShader = Raylib.LoadShaderFromMemory(gradVs, gradFs);
+        _gradientBottomColorLoc = Raylib.GetShaderLocation(_gradientShader, "bottomColor");
+        _gradientTopColorLoc = Raylib.GetShaderLocation(_gradientShader, "topColor");
+    }
+
+    private void LoadCubemapSkybox()
+    {
+        if (_skyboxTexture == "") return; 
+        int envMap = (int)MaterialMapIndex.Cubemap;
+        Raylib.SetShaderValue(_skyboxShaderCUBE, _envMapLocCUBE, envMap, ShaderUniformDataType.Int);
+        Raylib.SetShaderValue(_skyboxShaderCUBE, _vFlippedLocCUBE, 0, ShaderUniformDataType.Int);
+        Raylib.SetShaderValue(_skyboxShaderCUBE, _doGammaLocCUBE, 0, ShaderUniformDataType.Int);
+
+        Image img = Raylib.LoadImage(_skyboxTexture);
+        _cubemap = Raylib.LoadTextureCubemap(img, CubemapLayout.AutoDetect);
+        Raylib.UnloadImage(img);
+
+        _skyboxModel = Raylib.LoadModelFromMesh(Raylib.GenMeshCube(1, 1, 1));
+        Raylib.SetMaterialShader(ref _skyboxModel, 0, ref _skyboxShaderCUBE);
+        Raylib.SetMaterialTexture(ref _skyboxModel, 0, MaterialMapIndex.Cubemap, ref _cubemap);
+    }
+
+    private unsafe void LoadHDRI()
+    {
+        if (_skyboxTexture == "") return;
+
+        using var stream = File.OpenRead(_skyboxTexture);
+        ImageResultFloat hdrImage = ImageResultFloat.FromStream(stream, ColorComponents.RedGreenBlue);
+
+        Texture2D panorama = new();
+        fixed (float* ptr = hdrImage.Data)
+        {
+            panorama.Id = Rlgl.LoadTexture(ptr, hdrImage.Width, hdrImage.Height,
+                                            PixelFormat.UncompressedR32G32B32, 1);
+        }
+        panorama.Width = hdrImage.Width;
+        panorama.Height = hdrImage.Height;
+        panorama.Format = PixelFormat.UncompressedR32G32B32;
+        panorama.Mipmaps = 1;
+
+        int envMap = 0;
+        Raylib.SetShaderValue(_skyboxShaderHDRI, _envMapLocHDRI, envMap, ShaderUniformDataType.Int);
+        Raylib.SetShaderValue(_skyboxShaderHDRI, _vFlippedLocHDRI, 1, ShaderUniformDataType.Int);
+        Raylib.SetShaderValue(_skyboxShaderHDRI, _doGammaLocHDRI, _gammaEnabled ? 1 : 0, ShaderUniformDataType.Int);
+
+        _skyboxModel = Raylib.LoadModelFromMesh(Raylib.GenMeshCube(1f, 1f, 1f));
+        Raylib.SetMaterialShader(ref _skyboxModel, 0, ref _skyboxShaderHDRI);
+
+        Raylib.SetMaterialTexture(ref _skyboxModel, 0, MaterialMapIndex.Diffuse, ref panorama);
+
+        _cubemap = panorama;
+    }
 
     public void DrawDebugOverlay()
     {

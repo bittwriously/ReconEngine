@@ -1,5 +1,6 @@
 using System.Numerics;
 using ReconEngine;
+using ReconEngine.Entities;
 using ReconEngine.MeshSystem;
 using ReconEngine.System3D;
 
@@ -11,6 +12,10 @@ internal static class Testbed
 
         ReconCore.Ready += () =>
         {
+            var env = new WorldEnvironment();
+            var sky = new HDRISky("assets/skies/citrus_orchard_road_puresky_2k.hdr", 1024);
+            env.Sky = sky;
+            env.Activate();
             var camera = new ReconCamera3D
             {
                 Mode = CameraMode.Freecam,
@@ -36,7 +41,7 @@ internal static class Testbed
             };
             var sun = new SunLight()
             {
-                Direction = new(1, -1, 0),
+                Direction = new(-1, -0.4f, -0.57f),
                 Enabled = true,
                 Parent = ReconCore.MainWorld.Root
             };
