@@ -106,7 +106,7 @@ public class Jitter2Body : IPhysicsBody
 public class Jitter2World : IPhysicsEngine
 {
     private readonly World _world = new();
-    public CollisionGroupRegistry CGRegistry = new();
+    public CollisionGroupRegistry CGRegistry { get; } = new();
     internal readonly ulong defaultCG;
 
     public event Action<PhysicsEntity, PhysicsEntity>? BeginContact;
