@@ -15,6 +15,7 @@ public class Jitter2CollisionGroupFilter(CollisionGroupRegistry registry) : INar
     public bool Filter(RigidBodyShape shapeA, RigidBodyShape shapeB, ref JVector pointA, ref JVector pointB, ref JVector normal, ref float penetration)
     {
         if (shapeA.RigidBody?.Tag is not Jitter2Body a || shapeB.RigidBody?.Tag is not Jitter2Body b) return true;
+        if (a.IsTrigger || b.IsTrigger) return false;
         return _registry.Collides(a.CollisionGroup, b.CollisionGroup);
     }
 }
@@ -24,6 +25,9 @@ public class Jitter2Body : IPhysicsBody
     internal RigidBody body;
     private readonly World _worldRef;
     private readonly Jitter2World _wrapperRef;
+
+    public event Action<Jitter2Body>? BeginCollide;
+    public event Action<Jitter2Body>? EndCollide;
 
     public PhysicsEntity PhysicsEntity { get; set; } = null!; //sybau
 
@@ -35,6 +39,20 @@ public class Jitter2Body : IPhysicsBody
 
         body.MotionType = MotionType.Dynamic;
         body.Tag = this;
+
+        body.BeginCollide += arbiter =>
+        {
+            RigidBody otherRigidBody = arbiter.Body1 == body ? arbiter.Body2 : arbiter.Body1;
+            if (otherRigidBody.Tag is Jitter2Body otherBody)
+                BeginCollide?.Invoke(otherBody);
+        };
+
+        body.EndCollide += arbiter =>
+        {
+            RigidBody otherRigidBody = arbiter.Body1 == body ? arbiter.Body2 : arbiter.Body1;
+            if (otherRigidBody.Tag is Jitter2Body otherBody)
+                EndCollide?.Invoke(otherBody);
+        };
     }
     
     private RigidBodyShape? _shape;
@@ -81,6 +99,7 @@ public class Jitter2Body : IPhysicsBody
             _collisionGroup = value;
         }
     }
+    public bool IsTrigger { get; set; } = false;
 
 }
 
@@ -89,6 +108,9 @@ public class Jitter2World : IPhysicsEngine
     private readonly World _world = new();
     public CollisionGroupRegistry CGRegistry = new();
     internal readonly ulong defaultCG;
+
+    public event Action<PhysicsEntity, PhysicsEntity>? BeginContact;
+    public event Action<PhysicsEntity, PhysicsEntity>? EndContact;
 
     private readonly List<Jitter2Body> _bodies = [];
 
@@ -103,6 +125,19 @@ public class Jitter2World : IPhysicsEngine
     {
         Jitter2Body body = new(_world, this);
         _bodies.Add(body);
+
+        body.BeginCollide += other =>
+        {
+            if (body.PhysicsEntity != null && other.PhysicsEntity != null)
+                BeginContact?.Invoke(body.PhysicsEntity, other.PhysicsEntity);
+        };
+
+        body.EndCollide += other =>
+        {
+            if (body.PhysicsEntity != null && other.PhysicsEntity != null)
+                EndContact?.Invoke(body.PhysicsEntity, other.PhysicsEntity);
+        };
+
         return body;
     }
     public void RemoveBody(IPhysicsBody body) { if (body is Jitter2Body wrapper) _removeBody(wrapper); }

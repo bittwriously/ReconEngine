@@ -30,6 +30,9 @@ public readonly struct RaycastResult(Vector3 pos, float dist, PhysicsEntity body
 
 public interface IPhysicsEngine
 {
+    public event Action<PhysicsEntity, PhysicsEntity>? BeginContact;
+    public event Action<PhysicsEntity, PhysicsEntity>? EndContact;
+
     public IPhysicsBody CreateBody();
     public void RemoveBody(IPhysicsBody body);
 
