@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace ReconEngine.WorldSystem;
 
 public static class ReconEntityRegistry
@@ -380,7 +382,7 @@ public class ReconEntity : IUpdatable
             _propertySignals[propertyName] = delegate { };
 
         return ref System.Runtime.CompilerServices.Unsafe.AsRef(
-            in _propertySignals.GetValueRefOrNullRef(propertyName));
+            in CollectionsMarshal.GetValueRefOrNullRef(_propertySignals, propertyName));
     }
 
     protected bool SetProperty<T>(ref T field, T value, string propertyName)

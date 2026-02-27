@@ -2,6 +2,7 @@ using System.Collections;
 using System.Numerics;
 using Raylib_cs;
 using ReconEngine.RenderUtils;
+using ReconEngine.System3D;
 using ReconEngine.UISystem;
 
 namespace ReconEngine.RenderingEngines;
@@ -44,12 +45,14 @@ public class RaylibRenderer : IRenderer
     private LightingDebugMode _currentDebugMode = LightingDebugMode.None;
 
     private readonly RaylibShadowRenderer _shadowRenderer = new();
+    private Camera3D _camera;
 
     public IShadowRenderer GetShadowMapRenderer() => _shadowRenderer;
 
     public void InitWindow(int width, int height, string title)
     {
         Raylib.SetConfigFlags(ConfigFlags.VSyncHint);
+        Raylib.SetTraceLogLevel(TraceLogLevel.Error);
 
         Raylib.InitWindow(width, height, title);
         Raylib.DisableCursor();
@@ -237,7 +240,7 @@ public class RaylibRenderer : IRenderer
 
     public void BeginMode(ReconCamera3D camera)
     {
-        Raylib.SetShaderValue(_lightShader, _viewPosLoc, camera.RawCamera.Position, ShaderUniformDataType.Vec3);
+        Raylib.SetShaderValue(_lightShader, _viewPosLoc, camera.Position, ShaderUniformDataType.Vec3);
         Raylib.SetShaderValue(_lightShader, _cascadeSplitsLoc, _shadowRenderer.CascadeSplits, ShaderUniformDataType.Vec4);
         for (int i = 0; i < 4; i++)
         {
@@ -248,7 +251,8 @@ public class RaylibRenderer : IRenderer
             Rlgl.EnableTexture(_shadowRenderer.ShadowMaps[i].Texture.Id);
             Raylib.SetShaderValue(_lightShader, _cascadeShadowMapLocs[i], 1 + i, ShaderUniformDataType.Int);
         }
-        Raylib.BeginMode3D(camera.RawCamera);
+        _camera = new(camera.Position, camera.Target, camera.Up, camera.FovY, CameraProjection.Perspective);
+        Raylib.BeginMode3D(_camera);
     }
     public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 size)
     {

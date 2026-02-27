@@ -54,13 +54,11 @@ public static class ReconCore
 
         Ready?.Invoke();
 
-        ReconCamera3D camera = _camera ?? new ReconCamera3D(new Vector3(5f, 5f, 5f), Vector3.Zero);
-
         double physicsAccumulator = 0.0;
 
         while (!Renderer.ShouldClose())
         {
-            camera.Update();
+            ReconCamera3D camera = MainWorld.CurrentCamera ?? new ReconCamera3D();
 
             float deltaTime = Renderer.GetFrameTime();
             RunningTime += deltaTime;
@@ -88,7 +86,7 @@ public static class ReconCore
 
             MainWorld.Root.RenderStep(deltaTime, Renderer);
 
-            Renderer.GetShadowMapRenderer().UpdateSun(_sun.Definition);
+            if (_sun != null) Renderer.GetShadowMapRenderer().UpdateSun(_sun.Definition);
             shadowMapRenderer.UpdateMatrices(camera.Position);
             for (int i = 0; i < 4; i++)
             {
@@ -113,9 +111,6 @@ public static class ReconCore
         Renderer.CloseWindow();
         SoundProvider.Deinitialize();
     }
-
-    private static ReconCamera3D? _camera;
-    public static void SetCamera(ReconCamera3D camera) => _camera = camera;
 
     private static SunLight? _sun;
     public static void SetSun(SunLight sun)

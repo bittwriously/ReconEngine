@@ -28,7 +28,7 @@ public class Collection : ReconEntity
         };
 
         _nameHandlers[entity] = handler;
-        entity.GetPropertyChangedSignal(nameof(entity.Name)) += handler;
+        entity.GetPropertyChangeAction(nameof(entity.Name)) += handler;
 
         base.AddChild(entity);
     }
@@ -38,7 +38,7 @@ public class Collection : ReconEntity
         _namedChildren.Remove(entity.Name);
         if (_nameHandlers.TryGetValue(entity, out var handler))
         {
-            entity.GetPropertyChangedSignal(nameof(entity.Name)) -= handler;
+            entity.GetPropertyChangeAction(nameof(entity.Name)) -= handler;
             _nameHandlers.Remove(entity);
         }
         base.RemoveChild(entity);

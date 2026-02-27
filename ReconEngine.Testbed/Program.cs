@@ -1,7 +1,6 @@
 using System.Numerics;
 using ReconEngine;
 using ReconEngine.MeshSystem;
-using ReconEngine.RenderUtils;
 using ReconEngine.System3D;
 
 internal static class Testbed
@@ -12,8 +11,11 @@ internal static class Testbed
 
         ReconCore.Ready += () =>
         {
-            var camera = new ReconCamera3D(new Vector3(5f, 0f, 0f), Vector3.Zero);
-            ReconCore.SetCamera(camera);
+            var camera = new ReconCamera3D
+            {
+                Mode = CameraMode.Freecam,
+                Parent = ReconCore.MainWorld.Root,
+            };
             _ = new ReconMesh()
             {
                 MeshId = "assets/models/utah_teapot_new.obj",
