@@ -93,7 +93,7 @@ float ShadowCalculation(vec3 worldPos, vec3 norm, vec3 lightDir)
     if (projCoords.z > 1.0) return 0.0;
     projCoords.xy = clamp(projCoords.xy, 0.001, 0.999);
 
-    float slopeBias = 0.0005 * tan(acos(ndotl));
+    float slopeBias = 0;//0.0005 * tan(acos(ndotl));
     slopeBias = clamp(slopeBias, 0.0, 0.002);
 
     float shadow = 0.0;
