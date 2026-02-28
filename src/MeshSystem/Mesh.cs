@@ -3,6 +3,25 @@ using ReconEngine.System3D;
 
 namespace ReconEngine.MeshSystem;
 
+/*
+
+    Box = 0,
+    Sphere = 1,
+    Cylinder = 2,
+    Plane = 3,
+    Cone = 4,
+*/
+public enum MeshShapeType
+{
+    Box = 0,
+    Sphere = 1,
+    Cylinder = 2,
+    Plane = 3,
+    Cone = 4,
+
+    FileMesh = 100,
+}
+
 public class ReconMesh : PhysicsEntity
 {
     private Vector3 _size = Vector3.One;
@@ -34,6 +53,8 @@ public class ReconMesh : PhysicsEntity
         }
     }
 
+    public MeshShapeType ShapeType = MeshShapeType.Box;
+
     private Vector3 _lastPhysPos = Vector3.Zero;
     private Quaternion _lastPhysRot = Quaternion.Identity;
     private double _lastPhysTime = ReconCore.RunningTime;
@@ -50,8 +71,15 @@ public class ReconMesh : PhysicsEntity
         float alpha = (float)((ReconCore.RunningTime - _lastPhysTime) * _invPhysTime);
         Vector3 lerpedPos = ReconMath.Lerp(_lastPhysPos, Position, alpha);
         Quaternion lerpedRot = ReconMath.Lerp(_lastPhysRot, Rotation, alpha);
-        if (depth) renderer.DrawModelDepth(_meshId, lerpedPos, lerpedRot, Size);
-        else renderer.DrawModel(_meshId, _textureId, lerpedPos, lerpedRot, Size);
+        if (ShapeType == MeshShapeType.FileMesh)
+        {
+            if (depth) renderer.DrawModelDepth(_meshId, lerpedPos, lerpedRot, Size);
+            else renderer.DrawModel(_meshId, _textureId, lerpedPos, lerpedRot, Size);
+        } else
+        {
+            if (depth) renderer.DrawShapeDepth((ReconShape3D)ShapeType, lerpedPos, lerpedRot, Size);
+            else renderer.DrawShape((ReconShape3D)ShapeType, _textureId, lerpedPos, lerpedRot, Size);
+        }
     }
 
     public override void PhysicsStep(float deltaTime)

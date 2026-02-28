@@ -25,6 +25,7 @@ internal static class Testbed
             {
                 MeshId = "assets/models/utah_teapot_new.obj",
                 TextureId = "assets/textures/utahgrid.png",
+                ShapeType = MeshShapeType.FileMesh,
                 Size = new(6.43f, 3.15f, 4.0f),
                 Position = Vector3.Zero,
                 Static = false,
@@ -32,7 +33,6 @@ internal static class Testbed
             };
             _ = new ReconMesh()
             {
-                MeshId = "assets/models/cube.obj",
                 TextureId = "assets/textures/utahgrid.png",
                 Size = new(16, 1, 16),
                 Position = new(0, -4, 0),

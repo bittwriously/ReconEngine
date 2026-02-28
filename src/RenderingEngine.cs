@@ -27,6 +27,15 @@ public enum LightingDebugMode
     CascadeDebug = 10,
 }
 
+public enum ReconShape3D
+{
+    Box = 0,
+    Sphere = 1,
+    Cylinder = 2,
+    Plane = 3,
+    Cone = 4,
+}
+
 public enum SkyboxType
 {
     Cubemap = 0,
@@ -61,6 +70,8 @@ public interface IRenderer
 
     // switch to 3d manager (used for game world)
     public void BeginMode(ReconCamera3D camera);
+    public void DrawShape(ReconShape3D shape, uint textureId, Vector3 position, Quaternion rotation, Vector3 size);
+    public void DrawShapeDepth(ReconShape3D shape, Vector3 position, Quaternion rotation, Vector3 size);
     public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 size);
     public void DrawModelDepth(uint modelId, Vector3 position, Quaternion rotation, Vector3 size);
     public void EndMode();

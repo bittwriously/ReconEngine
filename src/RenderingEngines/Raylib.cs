@@ -13,6 +13,7 @@ public class RaylibRenderer : IRenderer
     private readonly Dictionary<uint, string> _meshPaths = [];
     private readonly Dictionary<uint, (Vector3 scale, Vector3 centerOffset)> _modelMetaCache = [];
     private readonly Dictionary<(uint meshId, uint textureId), Model> _materializedModels = [];
+    private readonly Dictionary<(ReconShape3D shape, uint textureId), Model> _materializedShapes = [];
     private uint _meshRegistryCounter = 0;
     private readonly Dictionary<uint, Texture2D> _textureRegistry = [];
     private uint _textureRegistryCounter = 0;
@@ -193,11 +194,36 @@ public class RaylibRenderer : IRenderer
         string path = _meshPaths[modelId];
         Model clone = Raylib.LoadModel(path);
         if (textureId != 0)
-        unsafe {
-            Texture2D texture = _textureRegistry[textureId];
-            Raylib.SetMaterialTexture(ref clone.Materials[0], MaterialMapIndex.Diffuse, texture);
-        }
+            unsafe
+            {
+                Texture2D texture = _textureRegistry[textureId];
+                Raylib.SetMaterialTexture(ref clone.Materials[0], MaterialMapIndex.Diffuse, texture);
+            }
         _materializedModels[key] = clone;
+        ApplyLightingShader(clone);
+        return clone;
+    }
+    private Model GetMaterializedShape(ReconShape3D shape, uint textureId)
+    {
+        var key = (shape, textureId);
+        if (_materializedShapes.TryGetValue(key, out Model existing))
+            return existing;
+        Model clone = Raylib.LoadModelFromMesh(shape switch
+        {
+            ReconShape3D.Box => Raylib.GenMeshCube(1, 1, 1),
+            ReconShape3D.Sphere => Raylib.GenMeshSphere(1, 32, 32),
+            ReconShape3D.Cone => Raylib.GenMeshCone(1, 32, 32),
+            ReconShape3D.Cylinder => Raylib.GenMeshCylinder(1, 1, 32),
+            ReconShape3D.Plane => Raylib.GenMeshPlane(1, 1, 1, 1),
+            _ => Raylib.GenMeshCube(1, 1, 1),
+        });
+        if (textureId != 0)
+            unsafe
+            {
+                Texture2D texture = _textureRegistry[textureId];
+                Raylib.SetMaterialTexture(ref clone.Materials[0], MaterialMapIndex.Diffuse, texture);
+            }
+        _materializedShapes[key] = clone;
         ApplyLightingShader(clone);
         return clone;
     }
@@ -290,6 +316,15 @@ public class RaylibRenderer : IRenderer
             Rlgl.EnableDepthTest();
         }
     }
+    public void DrawShape(ReconShape3D shape, uint textureId, Vector3 position, Quaternion rotation, Vector3 size)
+    {
+        Model model = GetMaterializedShape(shape, textureId);
+        float angle = 2f * MathF.Acos(rotation.W) * (180f / MathF.PI);
+        Vector3 axis = angle == 0
+            ? Vector3.UnitY
+            : Vector3.Normalize(new Vector3(rotation.X, rotation.Y, rotation.Z));
+        Raylib.DrawModelEx(model, position, axis, angle, size, Color.White);
+    }
     public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 size)
     {
         Model model = GetMaterializedModel(modelId, textureId);
@@ -307,6 +342,22 @@ public class RaylibRenderer : IRenderer
         Raylib.DrawModelEx(model, position, axis, angle, scale, Color.White);
     }
     private readonly Shader[] _depthShaderSwapBuffer = new Shader[16];
+    public void DrawShapeDepth(ReconShape3D shape, Vector3 position, Quaternion rotation, Vector3 size)
+    {
+        Model model = GetMaterializedShape(shape, 0);
+        for (int i = 0; i < model.MaterialCount; i++)
+        unsafe
+        {
+            _depthShaderSwapBuffer[i] = model.Materials[i].Shader;
+            model.Materials[i].Shader = _shadowRenderer.DepthShader;
+        }
+        DrawShape(shape, 0, position, rotation, size);
+        for (int i = 0; i < model.MaterialCount; i++)
+        unsafe
+        {
+            model.Materials[i].Shader = _depthShaderSwapBuffer[i];
+        }
+    }
     public void DrawModelDepth(uint modelId, Vector3 position, Quaternion rotation, Vector3 size)
     {
         Model model = GetMaterializedModel(modelId, 0);
