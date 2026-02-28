@@ -54,7 +54,7 @@ public class RaylibShadowRenderer : IShadowRenderer
             ShadowMaps[i] = CreateDepthMap(CascadeResolutions[i], CascadeResolutions[i]);
     }
 
-    public void UpdateSun(LightDefinition light) => _sunDir = Vector3.Normalize(light.Direction);
+    public void UpdateSun(LightDefinition? light) => _sunDir = Vector3.Normalize(light?.Direction ?? -Vector3.UnitY);
 
     private Matrix4x4 ComputeLightSpaceMatrix(float nearSplit, float farSplit, Vector3 cameraPos)
     {

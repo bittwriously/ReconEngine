@@ -1,6 +1,7 @@
 using System.Numerics;
 using ReconEngine.InputSystem;
 using ReconEngine.RenderingEngines;
+using ReconEngine.Serialization;
 using ReconEngine.SoundSystem;
 using ReconEngine.SoundSystem.SoundProviders;
 using ReconEngine.System3D;
@@ -36,6 +37,7 @@ public static class ReconCore
     public static void Run(ReconEngineConfig? config = null)
     {
         config ??= new ReconEngineConfig();
+        PrefabTypeRegistry.AutoRegister();
         PhysicsFrametime = 1.0 / config.PhysicsFramerate;
 
         Renderer      = config.Renderer      ?? new RaylibRenderer();
@@ -108,9 +110,9 @@ public static class ReconCore
     }
 
     private static SunLight? _sun;
-    public static void SetSun(SunLight sun)
+    public static void SetSun(SunLight? sun)
     {
         _sun = sun;
-        Renderer.GetShadowMapRenderer().UpdateSun(sun.Definition);
+        Renderer.GetShadowMapRenderer().UpdateSun(sun?.Definition);
     }
 }

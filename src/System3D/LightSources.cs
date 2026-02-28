@@ -27,5 +27,11 @@ public class SunLight : ReconLight3D
     {
         base.Ready();
         _definition.Type = LightType.Directional;
+
+        AncestryChanged += (sender, oldWorld) =>
+        {
+            if (CurrentWorld == ReconCore.MainWorld) ReconCore.SetSun(this);
+            else ReconCore.SetSun(null);
+        };
     }
 }

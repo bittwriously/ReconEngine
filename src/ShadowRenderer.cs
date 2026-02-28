@@ -8,7 +8,7 @@ public interface IShadowRenderer
 {
     public void InitShadowMapShaders();
     public void CreateShadowMap();
-    public void UpdateSun(LightDefinition light);
+    public void UpdateSun(LightDefinition? light);
     public void UpdateMatrices(Vector3 cameraPos);
     public void BeginCascade(int index);
     public void EndCascade();

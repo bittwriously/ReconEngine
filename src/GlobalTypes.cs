@@ -45,26 +45,27 @@ public static class ReconMath
     }
 }
 
-public struct Color4
+public struct Color4(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
 {
     public readonly static Color4 White = new(1, 1, 1, 1);
     public readonly static Color4 Black = new(0, 0, 0, 1);
 
-    public float Red;
-    public float Green;
-    public float Blue;
-    public float Alpha;
+    public float Red = r;
+    public float Green = g;
+    public float Blue = b;
+    public float Alpha = a;
 
-    public Color4(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
-    {
-        Red = r; Green = g; Blue = b; Alpha = a;
-    }
+    public float R { get => Red; set => Red = value; }
+    public float G { get => Green; set => Green = value; }
+    public float B { get => Blue; set => Blue = value; }
+    public float A { get => Alpha; set => Alpha = value; }
+
     public static Color4 FromRGB(int r = 255, int g = 255, int b = 255, int a = 255)
     {
         return new Color4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
     }
 
-    public float[] AsVec4()
+    public readonly float[] AsVec4()
     {
         return [Red, Green, Blue, Alpha];
     }

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using ReconEngine.Serialization;
 
 namespace ReconEngine.WorldSystem;
 
@@ -100,7 +101,11 @@ public class ReconEntity : IUpdatable
             prevParent?.ResetCache(CacheResetDirection.Both);
             ParentChanged?.Invoke(this, prevParent);
             AncestryChanged?.Invoke(this, prevParent?.CurrentWorld);
-            foreach (ReconEntity entity in Descendants) entity.AncestryChanged?.Invoke(this, prevParent?.CurrentWorld);
+            foreach (ReconEntity entity in Descendants)
+            {
+                entity._currentWorld = _currentWorld;
+                entity.AncestryChanged?.Invoke(this, prevParent?.CurrentWorld);
+            }
         }
     }
     public ReconWorld? CurrentWorld { get => _currentWorld; }
