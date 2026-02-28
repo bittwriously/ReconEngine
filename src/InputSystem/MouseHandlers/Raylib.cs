@@ -23,6 +23,8 @@ public class RaylibMouseHandler : IMouseHandler
         foreach (var btn in _buttonsToTrack) _buttonStates[btn] = false;
     }
     public Vector2 GetMousePosition() => Raylib.GetMousePosition();
+    public void SetMousePosition(Vector2 pos) => Raylib.SetMousePosition((int)pos.X, (int)pos.Y);
+    public void SetMouseCursorVisible(bool visible) { if (visible) Raylib.ShowCursor(); else Raylib.HideCursor(); }
     public Vector2 GetMouseMovement() => Raylib.GetMouseDelta();
     public bool IsMouseDown(int button) => Raylib.IsMouseButtonDown((MouseButton)button);
     public void Update()

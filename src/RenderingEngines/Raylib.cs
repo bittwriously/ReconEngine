@@ -57,7 +57,6 @@ public class RaylibRenderer : IRenderer
         Raylib.SetTraceLogLevel(TraceLogLevel.Error);
 
         Raylib.InitWindow(width, height, title);
-        Raylib.DisableCursor();
 
         _lightShader = Raylib.LoadShader("assets/shaders/lighting.vert", "assets/shaders/lighting.frag");
         unsafe { _lightShader.Locs[(int)ShaderLocationIndex.VectorView] = Raylib.GetShaderLocation(_lightShader, "viewPos"); }

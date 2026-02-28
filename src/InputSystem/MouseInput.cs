@@ -15,6 +15,9 @@ public interface IMouseHandler
     public event EventHandler<MouseButtonEventArgs>? MouseDown;
     public event EventHandler<MouseButtonEventArgs>? MouseUp;
 
+    public void SetMousePosition(Vector2 pos);
+    public void SetMouseCursorVisible(bool visible);
+
     public void Update();
 }
 
