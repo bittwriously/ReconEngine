@@ -83,7 +83,7 @@ float ShadowCalculation(vec3 worldPos, vec3 norm, vec3 lightDir)
 
     int cascadeIndex = GetCascadeIndex(worldPos);
 
-    float normalOffsetScale = 0.02 * (1.0 - ndotl);
+    float normalOffsetScale = 0.1 * (1.0 - ndotl);
     vec3 offsetPos = worldPos + norm * normalOffsetScale;
 
     vec4 offsetLightSpace = lightSpaceMatrices[cascadeIndex] * vec4(offsetPos, 1.0);
