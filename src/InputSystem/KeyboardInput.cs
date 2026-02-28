@@ -1,14 +1,14 @@
-
 namespace ReconEngine.InputSystem;
 
 public interface IKeyboardHandler
 {
-    public bool IsKeyDown(string Keycode);
+    public bool IsKeyDown(ReconKey key);
+    public bool IsKeyHeld(ReconKey key);
 
-    public event EventHandler<KeyboardButtonEventArgs>? ButtonDown;
-    public event EventHandler<KeyboardButtonEventArgs>? ButtonUp;
+    public event EventHandler<ReconKeyEventArgs>? KeyDown;
+    public event EventHandler<ReconKeyEventArgs>? KeyUp;
 
     public void Update();
 }
 
-public record struct KeyboardButtonEventArgs(string Keycode);
+public record struct ReconKeyEventArgs(ReconKey Key);

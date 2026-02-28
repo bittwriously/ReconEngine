@@ -3,14 +3,6 @@ using ReconEngine.System3D;
 
 namespace ReconEngine.MeshSystem;
 
-/*
-
-    Box = 0,
-    Sphere = 1,
-    Cylinder = 2,
-    Plane = 3,
-    Cone = 4,
-*/
 public enum MeshShapeType
 {
     Box = 0,

@@ -100,18 +100,18 @@ public class ReconCamera3D : ReconEntity
 
         Vector3 move = Vector3.Zero;
 
-        if (ReconInputSystem.KeyboardHandler.IsKeyDown("W")) move += forward;
-        if (ReconInputSystem.KeyboardHandler.IsKeyDown("S")) move -= forward;
-        if (ReconInputSystem.KeyboardHandler.IsKeyDown("D")) move += right;
-        if (ReconInputSystem.KeyboardHandler.IsKeyDown("A")) move -= right;
-        if (ReconInputSystem.KeyboardHandler.IsKeyDown("E")) move += up;
-        if (ReconInputSystem.KeyboardHandler.IsKeyDown("Q")) move -= up;
+        if (ReconInputSystem.IsKeyHeld(ReconKey.W)) move += forward;
+        if (ReconInputSystem.IsKeyHeld(ReconKey.S)) move -= forward;
+        if (ReconInputSystem.IsKeyHeld(ReconKey.D)) move += right;
+        if (ReconInputSystem.IsKeyHeld(ReconKey.A)) move -= right;
+        if (ReconInputSystem.IsKeyHeld(ReconKey.E)) move += up;
+        if (ReconInputSystem.IsKeyHeld(ReconKey.Q)) move -= up;
 
         if (move != Vector3.Zero)
             move = Vector3.Normalize(move);
 
         float speed = FreecamMoveSpeed;
-        if (ReconInputSystem.KeyboardHandler.IsKeyDown("LeftShift"))
+        if (ReconInputSystem.IsKeyHeld(ReconKey.LeftShift))
             speed *= FreecamSprintMultiplier;
 
         _freecamPosition += move * speed * deltaTime;
