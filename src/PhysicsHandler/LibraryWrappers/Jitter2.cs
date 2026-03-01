@@ -26,8 +26,8 @@ public class Jitter2Body : IPhysicsBody
     private readonly World _worldRef;
     private readonly Jitter2World _wrapperRef;
 
-    public event Action<Jitter2Body>? BeginCollide;
-    public event Action<Jitter2Body>? EndCollide;
+    public event Action<IPhysicsBody>? BeginCollide;
+    public event Action<IPhysicsBody>? EndCollide;
 
     public PhysicsEntity PhysicsEntity { get; set; } = null!; //sybau
 
