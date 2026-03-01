@@ -13,7 +13,7 @@ public class RaylibMouseHandler : IMouseHandler
         MouseButton.Side,
         MouseButton.Extra
     ];
-    private readonly Dictionary<MouseButton, bool> _buttonStates = new();
+    private readonly Dictionary<MouseButton, bool> _buttonStates = [];
     public event EventHandler<Vector2>? MouseMoved;
     public event EventHandler<float>? MouseScroll;
     public event EventHandler<MouseButtonEventArgs>? MouseDown;
@@ -26,7 +26,7 @@ public class RaylibMouseHandler : IMouseHandler
     public void SetMousePosition(Vector2 pos) => Raylib.SetMousePosition((int)pos.X, (int)pos.Y);
     public void SetMouseCursorVisible(bool visible) { if (visible) Raylib.ShowCursor(); else Raylib.HideCursor(); }
     public Vector2 GetMouseMovement() => Raylib.GetMouseDelta();
-    public bool IsMouseDown(int button) => Raylib.IsMouseButtonDown((MouseButton)button);
+    public bool IsMouseDown(int button) => Raylib.IsMouseButtonDown((MouseButton)button-1);
     public void Update()
     {
         Vector2 mPos = Raylib.GetMousePosition();

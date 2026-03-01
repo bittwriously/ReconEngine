@@ -54,6 +54,9 @@ public class ReconCamera3D : ReconEntity
                 break;
         }
     }
+
+    private Vector2 _mousePressedAt = Vector2.Zero;
+    private bool _mouse2Down = false;
     public override void Ready()
     {
         base.Ready();
@@ -62,6 +65,22 @@ public class ReconCamera3D : ReconEntity
         {
             oldWorld?.CurrentCamera = null;
             CurrentWorld?.CurrentCamera = this;
+        };
+
+        ReconInputSystem.MouseHandler.MouseDown += (sender, args) =>
+        {
+            if (args.Button == 2)
+            {
+                _mousePressedAt = args.Position;
+                _mouse2Down = true;
+            }
+        };
+        ReconInputSystem.MouseHandler.MouseUp += (sender, args) =>
+        {
+            if (args.Button == 2)
+            {
+                _mouse2Down = false;
+            }
         };
     }
 
@@ -89,10 +108,14 @@ public class ReconCamera3D : ReconEntity
 
     private void UpdateFreecam(float deltaTime)
     {
-        Vector2 mouseDelta = ReconInputSystem.MouseHandler.GetMouseMovement();
-        _freecamYaw -= mouseDelta.X * FreecamLookSpeed;
-        _freecamPitch -= mouseDelta.Y * FreecamLookSpeed;
-        _freecamPitch = Math.Clamp(_freecamPitch, -89f, 89f); // prevent flipping
+        if (_mouse2Down)
+        {
+            Vector2 mouseDelta = ReconInputSystem.MouseHandler.GetMouseMovement();
+            _freecamYaw -= mouseDelta.X * FreecamLookSpeed;
+            _freecamPitch -= mouseDelta.Y * FreecamLookSpeed;
+            _freecamPitch = Math.Clamp(_freecamPitch, -89f, 89f); // prevent flipping
+            ReconInputSystem.MouseHandler.SetMousePosition(_mousePressedAt);
+        }
 
         Vector3 forward = FreecamForward();
         Vector3 right = Vector3.Normalize(Vector3.Cross(forward, Vector3.UnitY));
