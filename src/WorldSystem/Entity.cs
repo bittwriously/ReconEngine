@@ -369,6 +369,14 @@ public class ReconEntity : IUpdatable
     {
         foreach (ReconEntity entity in Children) entity.PostPhysicsStep(deltaTime);
     }
+    public virtual void DrawStep3D(float deltaTime, IRenderer renderer)
+    {
+        foreach (ReconEntity entity in Children) entity.DrawStep3D(deltaTime, renderer);
+    }
+    public virtual void DrawStep2D(float deltaTime, IRenderer renderer)
+    {
+        foreach (ReconEntity entity in Children) entity.DrawStep2D(deltaTime, renderer);
+    }
     public virtual void Ready() { }
 
     public virtual ReconEntity Clone()

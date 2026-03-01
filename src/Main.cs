@@ -95,9 +95,11 @@ public static class ReconCore
 
             Renderer.BeginMode(camera);
             MainWorld.WorldMeshRegistry.DrawAllMeshes(Renderer);
+            MainWorld.Root.DrawStep3D(deltaTime, Renderer);
             Renderer.EndMode();
 
             ReconInputSystem.UpdateAll();
+            MainWorld.Root.DrawStep2D(deltaTime, Renderer);
             MainWorld.WorldGuiRegistry.DrawContainers(Renderer);
 
             Render?.Invoke(deltaTime);

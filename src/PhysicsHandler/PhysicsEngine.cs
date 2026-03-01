@@ -57,4 +57,6 @@ public interface IPhysicsEngine
     public object GetSphereShape(float radius);
     public object GetConeShape(float radius, float height);
     public object GetCapsuleShape(float radius, float length);
+
+    public IPhysicsConstraint CreateWeld(IPhysicsBody a, IPhysicsBody b);
 }

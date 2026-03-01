@@ -70,10 +70,14 @@ public interface IRenderer
 
     // switch to 3d manager (used for game world)
     public void BeginMode(ReconCamera3D camera);
+
     public void DrawShape(ReconShape3D shape, uint textureId, Vector3 position, Quaternion rotation, Vector3 size);
     public void DrawShapeDepth(ReconShape3D shape, Vector3 position, Quaternion rotation, Vector3 size);
     public void DrawModel(uint modelId, uint textureId, Vector3 position, Quaternion rotation, Vector3 size);
     public void DrawModelDepth(uint modelId, Vector3 position, Quaternion rotation, Vector3 size);
+
+    public void DrawLine3D(Vector3 posA, Vector3 posB, Color4 color);
+
     public void EndMode();
 
     // 2d methods (used for guis)

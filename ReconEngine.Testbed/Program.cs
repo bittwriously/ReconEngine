@@ -1,6 +1,7 @@
 using System.Numerics;
 using ReconEngine;
 using ReconEngine.Entities;
+using ReconEngine.Entities.Constraints;
 using ReconEngine.MeshSystem;
 using ReconEngine.System3D;
 
@@ -9,7 +10,7 @@ internal static class Testbed
     [STAThread]
     public static void Main()
     {
-
+        ReconMesh? mesh1 = new ReconMesh();
         ReconCore.Ready += () =>
         {
             var env = new WorldEnvironment();
@@ -21,16 +22,16 @@ internal static class Testbed
                 Mode = CameraMode.Freecam,
                 Parent = ReconCore.MainWorld.Root,
             };
-            var mesh1 = new ReconMesh()
+            mesh1 = new()
             {
                 MeshId = "assets/models/utah_teapot_new.obj",
                 TextureId = "assets/textures/utahgrid.png",
                 ShapeType = MeshShapeType.FileMesh,
                 Size = new(6.43f, 3.15f, 4.0f),
                 Position = Vector3.Zero,
-                Static = false,
-                Parent = ReconCore.MainWorld.Root,
+                Static = false
             };
+            mesh1.Parent = ReconCore.MainWorld.Root;
             var mesh2 = new ReconMesh()
             {
                 MeshId = "assets/models/utah_teapot_new.obj",
@@ -41,13 +42,14 @@ internal static class Testbed
                 Static = false,
                 Parent = ReconCore.MainWorld.Root,
             };
-            _ = new WeldConstraint()
+            _ = new PhysicsWeldConstraint()
             {
                 EntityA = mesh1,
                 EntityB = mesh2,
-                MatrixB = Matrix4x4.CreateTranslation(new Vector3(0, 3, 0)),
+                MatrixB = Matrix4x4.CreateTranslation(new Vector3(0, 5, 0)),
                 Enabled = true,
                 Parent = ReconCore.MainWorld.Root,
+                DrawConstraint = true,
             };
             _ = new ReconMesh()
             {

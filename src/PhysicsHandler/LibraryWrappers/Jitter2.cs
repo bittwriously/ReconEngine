@@ -3,6 +3,7 @@ using Jitter2;
 using Jitter2.Collision;
 using Jitter2.Collision.Shapes;
 using Jitter2.Dynamics;
+using Jitter2.Dynamics.Constraints;
 using Jitter2.LinearMath;
 using ReconEngine.System3D;
 using ReconEngine.WorldSystem;
@@ -226,4 +227,28 @@ public class Jitter2World : IPhysicsEngine
     public object GetSphereShape(float radius) => new SphereShape(radius);
     public object GetConeShape(float radius, float height) => new ConeShape(radius, height);
     public object GetCapsuleShape(float radius, float length) => new CapsuleShape(radius, length);
+
+    public IPhysicsConstraint CreateWeld(IPhysicsBody a, IPhysicsBody b)
+    {
+        if (a is not Jitter2Body ja || b is not Jitter2Body jb)
+            throw new ArgumentException("[Jitter2] Both bodies must be Jitter2Body");
+
+        var ballSocket = _world.CreateConstraint<BallSocket>(ja.body, jb.body);
+        ballSocket.Initialize(ja.body.Position);
+
+        var fixedAngle = _world.CreateConstraint<FixedAngle>(ja.body, jb.body);
+        fixedAngle.Initialize();
+
+        return new Jitter2Constraint(() =>
+        {
+            _world.Remove(ballSocket);
+            _world.Remove(fixedAngle);
+        });
+    }
+}
+
+public class Jitter2Constraint(Action remove) : IPhysicsConstraint
+{
+    private readonly Action _remove = remove;
+    public void Remove() => _remove();
 }

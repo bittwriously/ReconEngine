@@ -5,4 +5,5 @@ namespace ReconEngine.PhysicsHandler;
 
 public interface IPhysicsConstraint
 {
+    public void Remove();
 }

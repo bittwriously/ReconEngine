@@ -371,6 +371,9 @@ public class RaylibRenderer : IRenderer
             model.Materials[i].Shader = _depthShaderSwapBuffer[i];
         }
     }
+
+    public void DrawLine3D(Vector3 posA, Vector3 posB, Color4 color) => Raylib.DrawLine3D(posA, posB, Color4ToRaylibColor(color));
+
     public void EndMode() => Raylib.EndMode3D();
 
     private Color Color4ToRaylibColor(Color4 color4) => new(color4.Red, color4.Green, color4.Blue, color4.Alpha);
