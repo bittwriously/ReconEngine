@@ -28,7 +28,7 @@ internal static class Testbed
                 TextureId = "assets/textures/utahgrid.png",
                 ShapeType = MeshShapeType.FileMesh,
                 Size = new(6.43f, 3.15f, 4.0f),
-                Position = Vector3.Zero,
+                Position = new(0, 10, 0),
                 Static = false
             };
             mesh1.Parent = ReconCore.MainWorld.Root;

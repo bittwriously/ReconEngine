@@ -120,6 +120,7 @@ public class Jitter2World : IPhysicsEngine
         defaultCG = CGRegistry.Register("Default");
         _world.NarrowPhaseFilter = new Jitter2CollisionGroupFilter(CGRegistry);
         _world.Gravity = new JVector(0, -9.81f, 0);
+        _world.SolverIterations = (12, 8);
     }
 
     public IPhysicsBody CreateBody()
@@ -235,9 +236,13 @@ public class Jitter2World : IPhysicsEngine
 
         var ballSocket = _world.CreateConstraint<BallSocket>(ja.body, jb.body);
         ballSocket.Initialize(ja.body.Position);
+        ballSocket.Softness = 0f;
+        ballSocket.Bias = 1f;
 
         var fixedAngle = _world.CreateConstraint<FixedAngle>(ja.body, jb.body);
         fixedAngle.Initialize();
+        fixedAngle.Softness = 0f;
+        fixedAngle.Bias = 1f;
 
         return new Jitter2Constraint(() =>
         {

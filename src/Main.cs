@@ -15,6 +15,7 @@ public sealed class ReconEngineConfig
     public int WindowHeight = 600;
     public string WindowTitle = "ReconEngine";
     public double PhysicsFramerate = 20.0;
+    public int PhysicsSteps = 2;
     public IRenderer? Renderer;
     public ISoundProvider? SoundProvider;
 }
@@ -68,7 +69,11 @@ public static class ReconCore
                 physicsAccumulator -= PhysicsFrametime;
                 float physDt = (float)PhysicsFrametime;
                 MainWorld.Root.PhysicsStep(physDt);
-                MainWorld.PhysicsEngine.Update(physDt);
+                float stepDt = physDt / config.PhysicsSteps;
+                for (int i = 0; i < config.PhysicsSteps; i++)
+                {
+                    MainWorld.PhysicsEngine.Update(stepDt);
+                }
                 MainWorld.Root.PostPhysicsStep(physDt);
                 PhysicsUpdate?.Invoke(physDt);
             }
