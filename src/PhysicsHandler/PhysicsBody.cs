@@ -1,5 +1,4 @@
 using System.Numerics;
-using ReconEngine.PhysicsHandler.LibraryWrappers;
 using ReconEngine.System3D;
 
 namespace ReconEngine.PhysicsHandler;
@@ -19,6 +18,6 @@ public interface IPhysicsBody
     public bool Static { get; set; }
     public bool IsTrigger { get; set; }
 
-    public event Action<Jitter2Body>? BeginCollide;
-    public event Action<Jitter2Body>? EndCollide;
+    public event Action<IPhysicsBody>? BeginCollide;
+    public event Action<IPhysicsBody>? EndCollide;
 }

@@ -21,7 +21,7 @@ internal static class Testbed
                 Mode = CameraMode.Freecam,
                 Parent = ReconCore.MainWorld.Root,
             };
-            _ = new ReconMesh()
+            var mesh1 = new ReconMesh()
             {
                 MeshId = "assets/models/utah_teapot_new.obj",
                 TextureId = "assets/textures/utahgrid.png",
@@ -29,6 +29,24 @@ internal static class Testbed
                 Size = new(6.43f, 3.15f, 4.0f),
                 Position = Vector3.Zero,
                 Static = false,
+                Parent = ReconCore.MainWorld.Root,
+            };
+            var mesh2 = new ReconMesh()
+            {
+                MeshId = "assets/models/utah_teapot_new.obj",
+                TextureId = "assets/textures/utahgrid.png",
+                ShapeType = MeshShapeType.FileMesh,
+                Size = new(6.43f, 3.15f, 4.0f),
+                Position = Vector3.Zero,
+                Static = false,
+                Parent = ReconCore.MainWorld.Root,
+            };
+            _ = new WeldConstraint()
+            {
+                EntityA = mesh1,
+                EntityB = mesh2,
+                MatrixB = Matrix4x4.CreateTranslation(new Vector3(0, 3, 0)),
+                Enabled = true,
                 Parent = ReconCore.MainWorld.Root,
             };
             _ = new ReconMesh()

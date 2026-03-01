@@ -365,6 +365,10 @@ public class ReconEntity : IUpdatable
     {
         foreach (ReconEntity entity in Children) entity.PhysicsStep(deltaTime);
     }
+    public virtual void PostPhysicsStep(float deltaTime)
+    {
+        foreach (ReconEntity entity in Children) entity.PostPhysicsStep(deltaTime);
+    }
     public virtual void Ready() { }
 
     public virtual ReconEntity Clone()

@@ -5,8 +5,8 @@ namespace ReconEngine.System3D;
 
 public class ReconEntity3D : ReconEntity
 {
-    public Vector3 Position = Vector3.Zero;
-    public Quaternion Rotation = Quaternion.Identity;
+    public virtual Vector3 Position { get; set; } = Vector3.Zero;
+    public virtual Quaternion Rotation { get; set; } = Quaternion.Identity;
 
     public Vector3 RotationEuler
     {
@@ -14,9 +14,15 @@ public class ReconEntity3D : ReconEntity
         set => Rotation = EulerToQuaternion(value);
     }
 
-    public Matrix4x4 Transform =>
-        Matrix4x4.CreateFromQuaternion(Rotation) *
+    public Matrix4x4 Transform {
+        get => Matrix4x4.CreateFromQuaternion(Rotation) *
         Matrix4x4.CreateTranslation(Position);
+        set
+        {
+            Position = value.Translation;
+            Rotation = Quaternion.CreateFromRotationMatrix(value);
+        }
+    }
 
     public Vector3 Forward => Vector3.Transform(-Vector3.UnitZ, Rotation);
     public Vector3 Right => Vector3.Transform(Vector3.UnitX, Rotation);

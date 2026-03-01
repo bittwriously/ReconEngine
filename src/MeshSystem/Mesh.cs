@@ -52,6 +52,17 @@ public class ReconMesh : PhysicsEntity
     private double _lastPhysTime = ReconCore.RunningTime;
     private readonly double _invPhysTime = 1 / ReconCore.PhysicsFrametime;
 
+    public override Vector3 Position
+    {
+        get => base.Position;
+        set { base.Position = value; _lastPhysPos = value; }
+    }
+    public override Quaternion Rotation
+    {
+        get => base.Rotation;
+        set { base.Rotation = value; _lastPhysRot = value; }
+    }
+
     public uint _meshId = 0;
     public string _meshPath = "";
 

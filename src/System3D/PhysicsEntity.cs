@@ -15,12 +15,12 @@ public class PhysicsEntity : ReconEntity3D
     private string _collisionGroup = "Default";
     private object? _shape = null;
 
-    public new Vector3 Position
+    public override Vector3 Position
     {
         get => _physicsBody != null ? _physicsBody.Position : _position;
         set { _position = value; _physicsBody?.Position = value; }
     }
-    public new Quaternion Rotation
+    public override Quaternion Rotation
     {
         get => _physicsBody != null ? _physicsBody.Rotation : _rotation;
         set { _rotation = value; _physicsBody?.Rotation = value; }

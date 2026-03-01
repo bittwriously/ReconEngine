@@ -69,6 +69,7 @@ public static class ReconCore
                 float physDt = (float)PhysicsFrametime;
                 MainWorld.Root.PhysicsStep(physDt);
                 MainWorld.PhysicsEngine.Update(physDt);
+                MainWorld.Root.PostPhysicsStep(physDt);
                 PhysicsUpdate?.Invoke(physDt);
             }
 
