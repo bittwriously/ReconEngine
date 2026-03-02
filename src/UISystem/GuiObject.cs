@@ -161,7 +161,7 @@ public abstract class GuiObject : ReconEntity
     public void DrawSelfAndChildren(IRenderer renderer)
     {
         Draw(renderer);
-        foreach (GuiObject obj in _sortedChildren) obj.Draw(renderer);
+        foreach (GuiObject obj in _sortedChildren) obj.DrawSelfAndChildren(renderer);
     }
 
     private void UpdateChildrenOrder() => _sortedChildren = [.. Children.OfType<GuiObject>().OrderBy(c => c.ZIndex)];
@@ -179,6 +179,7 @@ public abstract class GuiObject : ReconEntity
             else AssignedContainer = null;
 
             AssignedContainer?.ContainerGrid.RegisterObject(this);
+            _transformdirty = true;
         };
     }
 

@@ -121,6 +121,20 @@ public class ReconEntity : IUpdatable
             FirePropertyChanged(nameof(Name));
         }
     }
+    public string FullName
+    {
+        get
+        {
+            string name = _name;
+            ReconEntity? current = this.Parent;
+            while (current != null)
+            {
+                name = $"{current.Name}.{name}";
+                current = current.Parent;
+            }
+            return name;
+        }
+    }
     public IEnumerable<ReconEntity> Children
     {
         get

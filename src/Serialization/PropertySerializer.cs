@@ -15,7 +15,7 @@ public static class EntityPropertySerializer
         typeof(int), typeof(uint), typeof(float), typeof(double),
         typeof(string),
         typeof(Vector2), typeof(Vector3), typeof(Quaternion), typeof(Matrix4x4),
-        typeof(Color4)
+        typeof(Color4), typeof(Vector4),
     ];
 
     public static byte[] Serialize(ReconEntity entity, PrefabWriteContext ctx)
@@ -117,6 +117,7 @@ public static class EntityPropertySerializer
         var opts = new JsonSerializerOptions();
         opts.Converters.Add(new Vector2Converter());
         opts.Converters.Add(new Vector3Converter());
+        opts.Converters.Add(new Vector4Converter());
         opts.Converters.Add(new QuaternionConverter());
         opts.Converters.Add(new Color4Converter());
         return opts;
@@ -211,20 +212,47 @@ public class Color4Converter : JsonConverter<Color4>
         while (r.Read() && r.TokenType != JsonTokenType.EndObject)
         {
             string key = r.GetString()!; r.Read();
-            if (key == "r") x = r.GetSingle();
-            else if (key == "g") y = r.GetSingle();
-            else if (key == "b") z = r.GetSingle();
-            else if (key == "a") w = r.GetSingle();
+            if (key == "Red") x = r.GetSingle();
+            else if (key == "Green") y = r.GetSingle();
+            else if (key == "Blue") z = r.GetSingle();
+            else if (key == "Alpha") w = r.GetSingle();
         }
         return new Color4(x, y, z, w);
     }
     public override void Write(Utf8JsonWriter w, Color4 v, JsonSerializerOptions o)
     {
         w.WriteStartObject();
-        w.WriteNumber("r", v.Red);
-        w.WriteNumber("g", v.Green);
-        w.WriteNumber("b", v.Blue);
-        w.WriteNumber("a", v.Alpha);
+        w.WriteNumber("Red", v.Red);
+        w.WriteNumber("Green", v.Green);
+        w.WriteNumber("Blue", v.Blue);
+        w.WriteNumber("Alpha", v.Alpha);
+        w.WriteEndObject();
+    }
+}
+
+public class Vector4Converter : JsonConverter<Vector4>
+{
+    public override Vector4 Read(ref Utf8JsonReader r, Type t, JsonSerializerOptions o)
+    {
+        float x = 0, y = 0, z = 0, w = 0;
+        while (r.Read() && r.TokenType != JsonTokenType.EndObject)
+        {
+            string key = r.GetString()!; r.Read();
+            if (key == "x") x = r.GetSingle();
+            else if (key == "y") y = r.GetSingle();
+            else if (key == "z") z = r.GetSingle();
+            else if (key == "w") w = r.GetSingle();
+        }
+        return new Vector4(x, y, z, w);
+    }
+
+    public override void Write(Utf8JsonWriter w, Vector4 v, JsonSerializerOptions o)
+    {
+        w.WriteStartObject();
+        w.WriteNumber("x", v.X);
+        w.WriteNumber("y", v.Y);
+        w.WriteNumber("z", v.Z);
+        w.WriteNumber("w", v.W);
         w.WriteEndObject();
     }
 }

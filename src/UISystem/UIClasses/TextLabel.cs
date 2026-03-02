@@ -25,7 +25,7 @@ public class TextLabel : GuiObject
     public Color4 TextColor = new(1, 1, 1, 1);
     public byte TextSize = 16;
     public TextLabelHAlign HorizontalAlignment = TextLabelHAlign.Middle;
-    public TextLabelVAlign VertialAlignment = TextLabelVAlign.Middle;
+    public TextLabelVAlign VerticalAlignment = TextLabelVAlign.Middle;
 
     private string _fontName = "";
     private uint _font = 1;
@@ -43,7 +43,7 @@ public class TextLabel : GuiObject
             TextLabelHAlign.Right => 1.0f,
             _ => 0.5f
         };
-        float verticalShift = TextLabelVAlign.Middle switch
+        float verticalShift = VerticalAlignment switch
         {
             TextLabelVAlign.Top => 0,
             TextLabelVAlign.Middle => 0.5f,
