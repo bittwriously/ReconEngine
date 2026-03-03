@@ -26,26 +26,19 @@ public class TextureLabel : GuiObject
 
     protected string _imageName = "";
     protected uint _imageId = 0;
-    protected unsafe uint* _currentImage;
 
     public override void Draw(IRenderer renderer)
     {
         base.Draw(renderer);
-        if (_imageName == "") return;
-        unsafe
-        {
-            renderer.DrawTexture(*_currentImage,
-                TransformCache.PosX, TransformCache.PosY,
-                TransformCache.SizeX, TransformCache.SizeY,
-                TransformCache.Rotation, Vector2.Zero, ImageColor,
-                ScalingMode
-            );
-        }
+        uint id = GetCurrentImageId();
+        if (id == 0) return;
+        renderer.DrawTexture(id,
+            TransformCache.PosX, TransformCache.PosY,
+            TransformCache.SizeX, TransformCache.SizeY,
+            TransformCache.Rotation, Vector2.Zero, ImageColor,
+            ScalingMode
+        );
     }
 
-    public override void Ready()
-    {
-        base.Ready();
-        unsafe { fixed (uint* ptr = &_imageId) { _currentImage = ptr; } }
-    }
+    protected virtual uint GetCurrentImageId() => _imageId;
 }

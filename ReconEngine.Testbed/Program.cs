@@ -26,7 +26,7 @@ internal static class Testbed
             };
             var gui = PrefabSerializer.LoadFromFile("assets/tinygui.inst") as GuiContainer;
             gui?.Parent = ReconCore.MainWorld.Root;
-            TreePrinter.PrintTree(gui);
+            TreePrinter.PrintTree(ReconCore.MainWorld.Root);
         };
 
         ReconCore.Run();

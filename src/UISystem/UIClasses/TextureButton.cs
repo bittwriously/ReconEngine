@@ -17,6 +17,9 @@ public class TextureButton : TextureLabel, IGuiButton
     public event MouseEvent? OnMouse2Up;
     public event MouseEvent? OnMouse3Up;
 
+    private enum ButtonImageState { Normal, Hovered, Pressed }
+    private ButtonImageState _imageState = ButtonImageState.Normal;
+
     public string HoverImage
     {
         get => _hoverImageName;
@@ -51,7 +54,7 @@ public class TextureButton : TextureLabel, IGuiButton
         if (Active && AutoBackgroundColor && !IsDown)
         {
             _overwriteBgColor = _hoverColor;
-            if (_hoverImageId != 0) unsafe { fixed (uint* ptr = &_hoverImageId) { _currentImage = ptr; } }
+            _imageState = ButtonImageState.Hovered;
         }
     }
     public override void IUnhover()
@@ -59,7 +62,7 @@ public class TextureButton : TextureLabel, IGuiButton
         base.IUnhover();
         if (!IsDown) {
             _overwriteBgColor = null;
-            unsafe { fixed (uint* ptr = &_imageId) { _currentImage = ptr; } }
+            _imageState = ButtonImageState.Normal;
         }
     }
 
@@ -93,7 +96,7 @@ public class TextureButton : TextureLabel, IGuiButton
             if (buttonIndex == 1)
             {
                 _overwriteBgColor = _pressedColor;
-                if (_pressImageId != 0) unsafe { fixed (uint* ptr = &_pressImageId) { _currentImage = ptr; } }
+                _imageState = ButtonImageState.Pressed;
             }
         }
     }
@@ -110,23 +113,17 @@ public class TextureButton : TextureLabel, IGuiButton
         if (Active)
         {
             upEvent?.Invoke(ReconInputSystem.MouseHandler.GetMousePosition());
-            _overwriteBgColor = MouseState switch
-            {
-                GuiMouseState.Hovered => _hoverColor,
-                _ => null,
-            };
-            unsafe
-            {
-                switch (MouseState)
-                {
-                    case GuiMouseState.Hovered:
-                        if (_hoverImageId != 0) unsafe { fixed (uint* ptr = &_hoverImageId) { _currentImage = ptr; } }
-                        break;
-                    default:
-                        unsafe { fixed (uint* ptr = &_imageId) { _currentImage = ptr; } }
-                        break;
-                }
-            }
+            _imageState = MouseState == GuiMouseState.Hovered
+                ? ButtonImageState.Hovered
+                : ButtonImageState.Normal;
+            _overwriteBgColor = MouseState == GuiMouseState.Hovered ? _hoverColor : null;
         }
     }
+
+    protected override uint GetCurrentImageId() => _imageState switch
+    {
+        ButtonImageState.Hovered => _hoverImageId != 0 ? _hoverImageId : _imageId,
+        ButtonImageState.Pressed => _pressImageId != 0 ? _pressImageId : _imageId,
+        _ => _imageId
+    };
 }

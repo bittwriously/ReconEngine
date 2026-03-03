@@ -50,6 +50,7 @@ public class RaylibRenderer : IRenderer
     private Camera3D _camera;
 
     private readonly Stack<Rectangle> _clipStack = new();
+    private Texture2D _defaultTexture;
 
     public IShadowRenderer GetShadowMapRenderer() => _shadowRenderer;
 
@@ -98,6 +99,11 @@ public class RaylibRenderer : IRenderer
         _shadowMapLoc = Raylib.GetShaderLocation(_lightShader, "shadowMap");
 
         LoadSkyboxShaders();
+
+        Image defImg = Raylib.GenImageChecked(4, 4, 2, 2, Color.Magenta, Color.Black);
+        Texture2D defaultTexture = Raylib.LoadTextureFromImage(defImg);
+        Raylib.UnloadImage(defImg);
+        _defaultTexture = defaultTexture;
     }
     public void CloseWindow() => Raylib.CloseWindow();
 
@@ -195,11 +201,10 @@ public class RaylibRenderer : IRenderer
         string path = _meshPaths[modelId];
         Model clone = Raylib.LoadModel(path);
         if (textureId != 0)
-            unsafe
-            {
-                Texture2D texture = _textureRegistry[textureId];
-                Raylib.SetMaterialTexture(ref clone.Materials[0], MaterialMapIndex.Diffuse, texture);
-            }
+        unsafe {
+            if (!_textureRegistry.TryGetValue(textureId, out Texture2D texture)) texture = _defaultTexture;
+            Raylib.SetMaterialTexture(ref clone.Materials[0], MaterialMapIndex.Diffuse, texture);
+        }
         _materializedModels[key] = clone;
         ApplyLightingShader(clone);
         return clone;
@@ -382,12 +387,12 @@ public class RaylibRenderer : IRenderer
 
     public void DrawTexture(uint textureId, int x, int y)
     {
-        if (!_textureRegistry.TryGetValue(textureId, out Texture2D texture)) return;
+        if (!_textureRegistry.TryGetValue(textureId, out Texture2D texture)) texture = _defaultTexture;
         Raylib.DrawTexture(texture, x, y, Color.White);
     }
     public void DrawTexture(uint textureId, int px, int py, int sx, int sy, float rotation, Vector2 anchor, Color4 color, TextureLabelScalingMode scalingMode)
     {
-        if (!_textureRegistry.TryGetValue(textureId, out Texture2D texture)) return;
+        if (!_textureRegistry.TryGetValue(textureId, out Texture2D texture)) texture = _defaultTexture;
         Rectangle source = new();
         Rectangle dest = new(px, py, sx, sy);
         Vector2 origin = new(sx * anchor.X, sy * anchor.Y);
