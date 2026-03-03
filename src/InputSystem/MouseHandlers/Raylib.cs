@@ -15,7 +15,7 @@ public class RaylibMouseHandler : IMouseHandler
     ];
     private readonly Dictionary<MouseButton, bool> _buttonStates = [];
     public event EventHandler<Vector2>? MouseMoved;
-    public event EventHandler<float>? MouseScroll;
+    public event EventHandler<Vector2>? MouseScroll;
     public event EventHandler<MouseButtonEventArgs>? MouseDown;
     public event EventHandler<MouseButtonEventArgs>? MouseUp;
     public RaylibMouseHandler()
@@ -46,7 +46,7 @@ public class RaylibMouseHandler : IMouseHandler
         }
         Vector2 mDelta = Raylib.GetMouseDelta();
         if (mDelta != Vector2.Zero) MouseMoved?.Invoke(this, mPos);
-        float wheelDelta = Raylib.GetMouseWheelMove();
-        if (wheelDelta != 0) MouseScroll?.Invoke(this, wheelDelta);
+        Vector2 wheelDelta = Raylib.GetMouseWheelMoveV();
+        if (wheelDelta != Vector2.Zero) MouseScroll?.Invoke(this, wheelDelta);
     }
 }

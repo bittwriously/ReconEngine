@@ -10,7 +10,7 @@ public interface IMouseHandler
     public bool IsMouseDown(int button);
 
     public event EventHandler<Vector2>? MouseMoved;
-    public event EventHandler<float>? MouseScroll;
+    public event EventHandler<Vector2>? MouseScroll;
 
     public event EventHandler<MouseButtonEventArgs>? MouseDown;
     public event EventHandler<MouseButtonEventArgs>? MouseUp;

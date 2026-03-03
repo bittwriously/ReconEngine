@@ -117,6 +117,7 @@ public abstract class GuiObject : ReconEntity
             parentGlobalPos = parent.Transform.Position;
             parentGlobalRot = parent.Transform.ToRotation();
             screenSize = new Vector2(parent.TransformCache.SizeX, parent.TransformCache.SizeY);
+            if (parent is ScrollingFrame scroll) parentGlobalPos -= scroll.CanvasPosition;
         }
         if (Parent is GuiContainer container)
         {
@@ -173,8 +174,8 @@ public abstract class GuiObject : ReconEntity
         );
     }
 
-    private List<GuiObject> _sortedChildren = [];
-    public void DrawSelfAndChildren(IRenderer renderer)
+    protected List<GuiObject> _sortedChildren = [];
+    public virtual void DrawSelfAndChildren(IRenderer renderer)
     {
         Draw(renderer);
 

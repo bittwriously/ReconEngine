@@ -46,7 +46,6 @@ public class TextureLabel : GuiObject
     public override void Ready()
     {
         base.Ready();
-        Image = "assets/textures/cpp_colors_thumb.png";
         unsafe { fixed (uint* ptr = &_imageId) { _currentImage = ptr; } }
     }
 }

@@ -39,6 +39,14 @@ public abstract class GuiContainer : ReconEntity
         return null;
     }
 
+    private GuiObject? GetObjectAt(Vector2 pos)
+    {
+        GridCell? cell = ContainerGrid.GetCellAt(pos.X, pos.Y);
+        if (cell == null) return null;
+
+        return cell.GetObjectAt(pos);
+    }
+
     public override void Ready()
     {
         base.Ready();
@@ -55,6 +63,14 @@ public abstract class GuiContainer : ReconEntity
         {
             GuiObject? hovered = ContainerGrid.HoverAt(ReconInputSystem.MouseHandler.GetMousePosition());
             hovered?.IMove(ReconInputSystem.MouseHandler.GetMouseMovement());
+
+            Vector2 pos = ReconInputSystem.MouseHandler.GetMousePosition();
+            GuiObject? obj = GetObjectAt(pos);
+            if (obj is ScrollingFrame scroll)
+            {
+                scroll.HandleMouseHover(pos);
+                if (ReconInputSystem.MouseHandler.IsMouseDown(1)) scroll.HandleMouseDrag(pos);
+            }
         };
 
         IGuiButton? lastPressed = null;
@@ -63,23 +79,28 @@ public abstract class GuiContainer : ReconEntity
             Vector2 pos = args.Position;
             int btnid = args.Button;
 
-            GridCell? cell = ContainerGrid.GetCellAt(pos.X, pos.Y);
-            if (cell == null) return;
-
-            GuiObject? obj = cell.GetObjectAt(pos);
-            if (obj == null) return;
-
+            GuiObject? obj = GetObjectAt(pos);
             if (obj is IGuiButton btn)
             {
                 btn.OnPointerPress(btnid);
                 lastPressed = btn;
-            }
+            } else if (obj is ScrollingFrame scroll) scroll.HandleMouseDown(pos);
         };
         ReconInputSystem.MouseHandler.MouseUp += (sender, args) =>
         {
+            Vector2 pos = args.Position;
             int btnid = args.Button;
             lastPressed?.OnPointerRelease(btnid);
             lastPressed = null;
+
+            GuiObject? obj = GetObjectAt(pos);
+            if (obj is ScrollingFrame scroll) scroll.HandleMouseUp();
+        };
+        ReconInputSystem.MouseHandler.MouseScroll += (sender, delta) => {
+            Vector2 pos = ReconInputSystem.MouseHandler.GetMousePosition();
+            GuiObject? obj = GetObjectAt(pos);
+
+            if (obj is ScrollingFrame scroll) scroll.HandleMouseWheel(delta.X, delta.Y);
         };
 
         UpdateChildrenOrder();
