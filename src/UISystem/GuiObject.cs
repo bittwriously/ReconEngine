@@ -26,6 +26,7 @@ public abstract class GuiObject : ReconEntity
 {
     public bool Interactable = true;
     public bool Visible = true;
+    public bool ClipDescendants = false;
     public GuiTransformCache TransformCache;
 
     public Vector4 Position // just like roblox UDim2s in order: X Scale, Y Scale, X Offset, Y Offset
@@ -108,42 +109,57 @@ public abstract class GuiObject : ReconEntity
 
     protected virtual void UpdateTransform(Vector2 screenSize)
     {
-        Coords2 parentCoords = Coords2.Identity;
+        Vector2 parentGlobalPos = Vector2.Zero;
+        float parentGlobalRot = 0f;
+
+        if (Parent is GuiObject parent)
         {
-            if (Parent is GuiObject parent)
-            {
-                parentCoords = parent.Transform;
-                screenSize = new Vector2(parent.TransformCache.SizeX, parent.TransformCache.SizeY);
-            }
-            if (Parent is GuiContainer container)
-            {
-                parentCoords += container.ScreenInsets;
-                screenSize -= container.ScreenInsets * 2;
-            }
+            parentGlobalPos = parent.Transform.Position;
+            parentGlobalRot = parent.Transform.ToRotation();
+            screenSize = new Vector2(parent.TransformCache.SizeX, parent.TransformCache.SizeY);
+        }
+        if (Parent is GuiContainer container)
+        {
+            parentGlobalPos += container.ScreenInsets;
+            screenSize -= container.ScreenInsets * 2;
         }
 
         ScaledSizeToAbsoluteSize(_position, screenSize, out int PosX, out int PosY);
         ScaledSizeToAbsoluteSize(_size, screenSize, out int SizeX, out int SizeY);
 
-        Vector2 position = new(PosX, PosY);
-        Coords2 modifiedCoords = new Coords2(position, ReconMath.Deg2Rad(_rotation)) + (parentCoords.Position * 0.5f);
+        Vector2 localPos = new(PosX, PosY);
+        Vector2 size = new(SizeX, SizeY);
 
-        TransformCache.Rotation = ReconMath.Rad2Deg(modifiedCoords.ToRotation());
-        TransformCache.PosX = (int)Math.Floor(modifiedCoords.Position.X);
-        TransformCache.PosY = (int)Math.Floor(modifiedCoords.Position.Y);
-        TransformCache.SizeX = SizeX; TransformCache.SizeY = SizeY;
+        Vector2 anchorOffset = _anchorpoint * size;
+
+        Vector2 pivotPos = localPos;
+
+        float globalRot = parentGlobalRot + ReconMath.Deg2Rad(_rotation);
+        Vector2 rotatedLocalPos = ReconMath.RotatePoint(pivotPos, parentGlobalRot);
+        Vector2 globalPivot = parentGlobalPos + rotatedLocalPos;
+
+        Vector2 globalTopLeft = globalPivot - ReconMath.RotatePoint(anchorOffset, globalRot);
+
+        TransformCache.Rotation = ReconMath.Rad2Deg(globalRot);
+        TransformCache.PosX = (int)Math.Floor(globalTopLeft.X);
+        TransformCache.PosY = (int)Math.Floor(globalTopLeft.Y);
+        TransformCache.SizeX = SizeX;
+        TransformCache.SizeY = SizeY;
         TransformCache.ScreenSize = screenSize;
 
-        Vector2 extents = new Vector2(SizeX, SizeY) * 0.5f;
-        GlobalBounds = new((modifiedCoords * new Coords2(extents)).Position, extents, modifiedCoords.ToRotation());
+        Vector2 extents = size * 0.5f;
+        Vector2 globalCenter = globalPivot + ReconMath.RotatePoint(extents - anchorOffset, globalRot);
+        GlobalBounds = new OOBB2(globalCenter, extents, globalRot);
 
-        Transform = modifiedCoords;
+        Transform = new Coords2(globalTopLeft, globalRot);
         _lastScreenSize = screenSize;
         _transformdirty = false;
 
         AssignedContainer?.ContainerGrid.UpdateObject(this);
 
-        foreach (ReconEntity entity in Children) if (entity is GuiObject obj) obj.UpdateTransform(screenSize);
+        foreach (ReconEntity entity in Children)
+            if (entity is GuiObject obj)
+                obj.UpdateTransform(screenSize);
     }
 
     public virtual void Draw(IRenderer renderer)
@@ -153,7 +169,7 @@ public abstract class GuiObject : ReconEntity
         renderer.DrawRect(
             TransformCache.PosX, TransformCache.PosY,
             TransformCache.SizeX, TransformCache.SizeY,
-            TransformCache.Rotation, _anchorpoint, _overwriteBgColor != null ? _overwriteBgColor.Value : BackgroundColor
+            TransformCache.Rotation, Vector2.Zero, _overwriteBgColor != null ? _overwriteBgColor.Value : BackgroundColor
         );
     }
 
@@ -161,7 +177,15 @@ public abstract class GuiObject : ReconEntity
     public void DrawSelfAndChildren(IRenderer renderer)
     {
         Draw(renderer);
+
+        if (ClipDescendants) renderer.PushClipRect(
+            TransformCache.PosX, TransformCache.PosY,
+            TransformCache.SizeX, TransformCache.SizeY
+        );
+
         foreach (GuiObject obj in _sortedChildren) obj.DrawSelfAndChildren(renderer);
+
+        if (ClipDescendants) renderer.PopClipRect();
     }
 
     private void UpdateChildrenOrder() => _sortedChildren = [.. Children.OfType<GuiObject>().OrderBy(c => c.ZIndex)];

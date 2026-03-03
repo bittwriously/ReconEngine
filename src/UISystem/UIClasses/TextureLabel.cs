@@ -37,7 +37,7 @@ public class TextureLabel : GuiObject
             renderer.DrawTexture(*_currentImage,
                 TransformCache.PosX, TransformCache.PosY,
                 TransformCache.SizeX, TransformCache.SizeY,
-                TransformCache.Rotation, AnchorPoint, ImageColor,
+                TransformCache.Rotation, Vector2.Zero, ImageColor,
                 ScalingMode
             );
         }

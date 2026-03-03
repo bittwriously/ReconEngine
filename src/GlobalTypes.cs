@@ -43,6 +43,12 @@ public static class ReconMath
         );
         return Quaternion.Normalize(result);
     }
+
+    public static Vector2 RotatePoint(Vector2 v, float rot)
+    {
+        float cos = MathF.Cos(rot); float sin = MathF.Sin(rot);
+        return new Vector2(v.X * cos - v.Y * sin, v.X * sin + v.Y * cos);
+    }
 }
 
 public struct Color4(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)

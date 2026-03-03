@@ -54,8 +54,8 @@ public class TextLabel : GuiObject
             textSize.X * horizontalShift,
             textSize.Y * verticalShift
         );
-        float drawX = TransformCache.PosX + (TransformCache.SizeX * (horizontalShift - AnchorPoint.X));
-        float drawY = TransformCache.PosY + (TransformCache.SizeY * (verticalShift - AnchorPoint.Y));
+        float drawX = TransformCache.PosX + (TransformCache.SizeX * horizontalShift);
+        float drawY = TransformCache.PosY + (TransformCache.SizeY * verticalShift);
 
         renderer.DrawText(
             Text,

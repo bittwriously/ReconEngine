@@ -49,6 +49,8 @@ public class RaylibRenderer : IRenderer
     private readonly RaylibShadowRenderer _shadowRenderer = new();
     private Camera3D _camera;
 
+    private readonly Stack<Rectangle> _clipStack = new();
+
     public IShadowRenderer GetShadowMapRenderer() => _shadowRenderer;
 
     public void InitWindow(int width, int height, string title)
@@ -422,6 +424,36 @@ public class RaylibRenderer : IRenderer
         Rectangle dest = new(px, py, sx, sy);
         Vector2 origin = new(sx * anchor.X, sy * anchor.Y);
         Raylib.DrawRectanglePro(dest, origin, rotation, Color4ToRaylibColor(color));
+    }
+    public void PushClipRect(int x, int y, int w, int h)
+    {
+        Rectangle rect = new(x, y, w, h);
+        if (_clipStack.Count > 0) rect = IntersectRects(_clipStack.Peek(), rect);
+        _clipStack.Push(rect);
+        Raylib.BeginScissorMode((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height);
+    }
+    public void PopClipRect()
+    {
+        _clipStack.Pop();
+        if (_clipStack.Count > 0)
+        {
+            var rect = _clipStack.Peek();
+            Raylib.BeginScissorMode((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height);
+        }
+        else Raylib.EndScissorMode();
+    }
+
+    private static Rectangle IntersectRects(Rectangle a, Rectangle b)
+    {
+        float x1 = Math.Max(a.X, b.X);
+        float y1 = Math.Max(a.Y, b.Y);
+        float x2 = Math.Min(a.X + a.Width, b.X + b.Width);
+        float y2 = Math.Min(a.Y + a.Height, b.Y + b.Height);
+
+        float w = Math.Max(0, x2 - x1);
+        float h = Math.Max(0, y2 - y1);
+
+        return new Rectangle(x1, y1, w, h);
     }
 
     public void ClearBuffer() => Raylib.ClearBackground(Color.Black);
