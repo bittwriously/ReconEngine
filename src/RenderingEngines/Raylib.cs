@@ -292,7 +292,7 @@ public class RaylibRenderer : IRenderer
                 _shadowRenderer.LightSpaceMatrices[i]);
 
             Rlgl.ActiveTextureSlot(1 + i);
-            Rlgl.EnableTexture(_shadowRenderer.ShadowMaps[i].Texture.Id);
+            Rlgl.EnableTexture(_shadowRenderer._shadowMaps[i].Texture.Id);
             Raylib.SetShaderValue(_lightShader, _cascadeShadowMapLocs[i], 1 + i, ShaderUniformDataType.Int);
         }
         _camera = new(camera.Position, camera.Target, camera.Up, camera.FovY, CameraProjection.Perspective);
