@@ -1,5 +1,6 @@
 using System.Numerics;
 using ReconEngine.InputSystem;
+using ReconEngine.UISystem.Components;
 using ReconEngine.WorldSystem;
 
 namespace ReconEngine.UISystem;
@@ -175,6 +176,7 @@ public abstract class GuiObject : ReconEntity
     }
 
     protected List<GuiObject> _sortedChildren = [];
+    protected List<GuiComponent> _components = [];
     public virtual void DrawSelfAndChildren(IRenderer renderer)
     {
         Draw(renderer);
@@ -187,6 +189,17 @@ public abstract class GuiObject : ReconEntity
         foreach (GuiObject obj in _sortedChildren) obj.DrawSelfAndChildren(renderer);
 
         if (ClipDescendants) renderer.PopClipRect();
+    }
+
+    internal void RegisterComponent(GuiComponent c)
+    {
+        if (_components.Contains(c)) return;
+        _components.Add(c);
+    }
+    internal void UnregisterComponent(GuiComponent c)
+    {
+        if (!_components.Contains(c)) return;
+        _components.Remove(c);
     }
 
     private void UpdateChildrenOrder() => _sortedChildren = [.. Children.OfType<GuiObject>().OrderBy(c => c.ZIndex)];
