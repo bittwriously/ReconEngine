@@ -86,6 +86,9 @@ public interface IRenderer
     public void DrawText(string text, int x, int y, byte textsize, Color4 color);
     public void DrawText(string text, int x, int y, uint fontid, byte textsize, Color4 color, Vector2 anchor, float rotation);
     public void DrawRect(int px, int py, int sx, int sy, float rotation, Vector2 anchor, Color4 color);
+    public void DrawRectOutline(int px, int py, int sx, int sy, float rotation, Color4 color, float thickness);
+    public void DrawLine(Vector2 posA, Vector2 posB, Color4 color);
+    public void DrawLine(int px, int py, int sx, int sy, Color4 color, float thickness);
     public void PushClipRect(int x, int y, int w, int h);
     public void PopClipRect();
 

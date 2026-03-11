@@ -57,6 +57,7 @@ public class RaylibRenderer : IRenderer
     public void InitWindow(int width, int height, string title)
     {
         Raylib.SetConfigFlags(ConfigFlags.VSyncHint);
+        Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         Raylib.SetTraceLogLevel(TraceLogLevel.Error);
 
         Raylib.InitWindow(width, height, title);
@@ -430,6 +431,14 @@ public class RaylibRenderer : IRenderer
         Vector2 origin = new(sx * anchor.X, sy * anchor.Y);
         Raylib.DrawRectanglePro(dest, origin, rotation, Color4ToRaylibColor(color));
     }
+    public void DrawRectOutline(int px, int py, int sx, int sy, float rotation, Color4 color, float thickness)
+    {
+        Rectangle dest = new(px, py, sx, sy);
+        Raylib.DrawRectangleLinesEx(dest, thickness, Color4ToRaylibColor(color));
+    }
+    public void DrawLine(Vector2 posA, Vector2 posB, Color4 color) => Raylib.DrawLineEx(posA, posB, 1, Color4ToRaylibColor(color));
+    public void DrawLine(int px, int py, int sx, int sy, Color4 color, float thickness) =>
+        Raylib.DrawLineEx(new Vector2(px, py), new Vector2(sx, sy), thickness, Color4ToRaylibColor(color));
     public void PushClipRect(int x, int y, int w, int h)
     {
         Rectangle rect = new(x, y, w, h);
