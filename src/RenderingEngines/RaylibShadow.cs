@@ -15,7 +15,6 @@ public class RaylibShadowRenderer : IShadowRenderer
     public int CascadeCount => CASCADE_COUNT;
     public float[] CascadeSplits => [16f, 64f, 128f, 256f];
     public Matrix4x4[] LightSpaceMatrices => _lightSpaceMatrices;
-    public RenderTexture2D[] ShadowMaps => _shadowMaps;
 
     internal readonly RenderTexture2D[] _shadowMaps = new RenderTexture2D[CASCADE_COUNT];
     internal readonly Matrix4x4[] _lightSpaceMatrices = new Matrix4x4[CASCADE_COUNT];
@@ -51,7 +50,7 @@ public class RaylibShadowRenderer : IShadowRenderer
     public void CreateShadowMap()
     {
         for (int i = 0; i < CascadeCount; i++)
-            ShadowMaps[i] = CreateDepthMap(CascadeResolutions[i], CascadeResolutions[i]);
+            _shadowMaps[i] = CreateDepthMap(CascadeResolutions[i], CascadeResolutions[i]);
     }
 
     public void UpdateSun(LightDefinition? light) => _sunDir = Vector3.Normalize(light?.Direction ?? -Vector3.UnitY);
@@ -94,7 +93,7 @@ public class RaylibShadowRenderer : IShadowRenderer
     public void BeginCascade(int index)
     {
         Raylib.SetShaderValueMatrix(DepthShader, _lightSpaceLoc, LightSpaceMatrices[index]);
-        Raylib.BeginTextureMode(ShadowMaps[index]);
+        Raylib.BeginTextureMode(_shadowMaps[index]);
         Raylib.ClearBackground(Color.White);
         Rlgl.SetCullFace(0);
 
@@ -118,9 +117,9 @@ public class RaylibShadowRenderer : IShadowRenderer
         for (int i = 0; i < CascadeCount; i++)
         {
             int xOffset = x + i * (size + 10);
-            Rectangle source = new(0, 0, ShadowMaps[i].Texture.Width, -ShadowMaps[i].Texture.Height);
+            Rectangle source = new(0, 0, _shadowMaps[i].Texture.Width, -_shadowMaps[i].Texture.Height);
             Rectangle dest = new(xOffset, y, size, size);
-            Raylib.DrawTexturePro(ShadowMaps[i].Texture, source, dest, Vector2.Zero, 0f, Color.White);
+            Raylib.DrawTexturePro(_shadowMaps[i].Texture, source, dest, Vector2.Zero, 0f, Color.White);
             Raylib.DrawRectangleLines(xOffset, y, size, size, Color.Green);
             Raylib.DrawText($"C{i} ({CascadeSplits[i]}u)", xOffset, y - 16, 14, Color.Green);
         }
