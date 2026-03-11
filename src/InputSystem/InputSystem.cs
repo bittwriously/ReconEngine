@@ -1,10 +1,22 @@
+using ReconEngine.RenderingEngines;
+
 namespace ReconEngine.InputSystem;
 
 public static class ReconInputSystem
 {
-    public static readonly IMouseHandler MouseHandler = new RaylibMouseHandler();
-    public static readonly IKeyboardHandler KeyboardHandler = new RaylibKeyboardHandler();
-    public static readonly ITextInputHandler TextInputHandler = new RaylibTextInputHandler();
+    public static IMouseHandler MouseHandler = new NullMouseHandler();
+    public static IKeyboardHandler KeyboardHandler = new NullKeyboardHandler();
+    public static ITextInputHandler TextInputHandler = new NullTextInputHandler();
+
+    public static void Initialize(IRenderer renderer)
+    {
+        if (renderer is RaylibRenderer)
+        {
+            MouseHandler = new RaylibMouseHandler();
+            KeyboardHandler = new RaylibKeyboardHandler();
+            TextInputHandler = new RaylibTextInputHandler();
+        }
+    }
 
     public static void UpdateAll()
     {

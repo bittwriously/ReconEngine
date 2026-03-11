@@ -1,5 +1,4 @@
 using System.Numerics;
-using Raylib_cs;
 using ReconEngine.RenderUtils;
 
 namespace ReconEngine;
@@ -17,5 +16,4 @@ public interface IShadowRenderer
     public int CascadeCount { get; }
     public float[] CascadeSplits { get; }
     public Matrix4x4[] LightSpaceMatrices { get; }
-    public RenderTexture2D[] ShadowMaps { get; }
 }

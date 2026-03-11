@@ -33,7 +33,6 @@ public static class ReconCore
     public static event Action<float>? PhysicsUpdate;
     public static event Action<float>? Render;
     public static event Action? Shutdown;
-
     
     public static void Run(ReconEngineConfig? config = null)
     {
@@ -48,6 +47,7 @@ public static class ReconCore
         SoundProvider.Initialize();
 
         IShadowRenderer shadowMapRenderer = Renderer.GetShadowMapRenderer();
+        ReconInputSystem.Initialize(Renderer);
 
         MainWorld = new ReconWorld("MainWorld");
 
