@@ -92,9 +92,9 @@ public class TextLabel : GuiObject
         return best;
     }
 
-    public override void Draw(IRenderer renderer)
+    public override void Draw(IRenderer renderer, Vector2 parentSize, Vector2 posOffset)
     {
-        base.Draw(renderer);
+        base.Draw(renderer, parentSize, posOffset);
         if (_text == "") return;
 
         byte resolvedSize = ResolveTextSize(renderer);
@@ -125,8 +125,8 @@ public class TextLabel : GuiObject
 
         renderer.DrawText(
             _text,
-            (int)drawX,
-            (int)drawY,
+            (int)drawX + (int)posOffset.Y,
+            (int)drawY + (int)posOffset.Y,
             _font,
             resolvedSize,
             TextColor,

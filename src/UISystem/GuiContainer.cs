@@ -26,7 +26,8 @@ public abstract class GuiContainer : ReconEntity
     public void UpdateChildrenOrder() => _sortedChildren = [.. Children.OfType<GuiObject>().OrderBy(c => c.ZIndex)];
     public void DrawElements(IRenderer renderer)
     {
-        foreach (GuiObject obj in _sortedChildren) obj.DrawSelfAndChildren(renderer);
+        Vector2 size = renderer.GetScreenSize() - (ScreenInsets * 2);
+        foreach (GuiObject obj in _sortedChildren) obj.DrawSelfAndChildren(renderer, size, ScreenInsets);
     }
 
     public GuiObject? GetElementAt(Vector2 point)
@@ -111,12 +112,12 @@ public abstract class GuiContainer : ReconEntity
         base.Destroy();
     }
 
-    public override void AddChild(ReconEntity entity)
+    protected override void AddChild(ReconEntity entity)
     {
         base.AddChild(entity);
         UpdateChildrenOrder();
     }
-    public override void RemoveChild(ReconEntity entity)
+    protected override void RemoveChild(ReconEntity entity)
     {
         base.RemoveChild(entity);
         UpdateChildrenOrder();

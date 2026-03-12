@@ -1,3 +1,4 @@
+using System.Numerics;
 using ReconEngine.WorldSystem;
 
 namespace ReconEngine.UISystem.Components;
@@ -17,12 +18,10 @@ public abstract class GuiComponent : ReconEntity
         };
     }
 
-    public virtual void Layout() { }
+    public virtual void BeforeDraw(IRenderer renderer, ref GuiTransformCache transform) { }
+    public virtual void AfterDraw(IRenderer renderer, ref GuiTransformCache transform) { }
+    public virtual void BeforeChildrenDraw(IRenderer renderer, ref GuiTransformCache transform, ref Vector2 parentSize, ref Vector2 posOffset) { }
+    public virtual void AfterChildrenDraw(IRenderer renderer, ref GuiTransformCache transform, ref Vector2 parentSize, ref Vector2 posOffset) { }
 
-    public virtual void BeforeDraw() { }
-    public virtual void BeforeChildrenDraw() { }
-    public virtual void AfterChildrenDraw() { }
-    public virtual void AfterDraw() { }
-
-    public virtual void PostTransform() { }
+    public virtual void PostTransform(ref GuiTransformCache transform) { }
 }

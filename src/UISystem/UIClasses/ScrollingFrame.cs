@@ -163,26 +163,26 @@ public class ScrollingFrame : Frame {
             && point.Y >= barY && point.Y <= barY + ScrollBarThickness;
     }
 
-    protected override void UpdateTransform(Vector2 screenSize)
+    protected override void UpdateTransform(Vector2 screenSize, Vector2 parentSize)
     {
-        base.UpdateTransform(screenSize);
+        base.UpdateTransform(screenSize, parentSize);
 
         _absoluteCanvasSize = ResolveCanvasSize();
         _canvasPosition = ClampCanvasPosition(_canvasPosition);
         _scrollDirty = false;
     }
 
-    public override void Draw(IRenderer renderer)
+    public override void Draw(IRenderer renderer, Vector2 parentSize, Vector2 posOffset)
     {
         Vector2 screenSize = renderer.GetScreenSize();
-        if (_scrollDirty) UpdateTransform(screenSize);
+        if (_scrollDirty) UpdateTransform(screenSize, parentSize);
 
-        base.Draw(renderer);
+        base.Draw(renderer, parentSize, posOffset);
     }
 
-    public override void DrawSelfAndChildren(IRenderer renderer)
+    public override void DrawSelfAndChildren(IRenderer renderer, Vector2 parentSize, Vector2 posOffset)
     {
-        base.DrawSelfAndChildren(renderer);
+        base.DrawSelfAndChildren(renderer, parentSize, posOffset);
         DrawScrollBars(renderer);
     }
 

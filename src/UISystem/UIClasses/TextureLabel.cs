@@ -27,13 +27,13 @@ public class TextureLabel : GuiObject
     protected string _imageName = "";
     protected uint _imageId = 0;
 
-    public override void Draw(IRenderer renderer)
+    public override void Draw(IRenderer renderer, Vector2 parentSize, Vector2 posOffset)
     {
-        base.Draw(renderer);
+        base.Draw(renderer, parentSize, posOffset);
         uint id = GetCurrentImageId();
         if (id == 0) return;
         renderer.DrawTexture(id,
-            TransformCache.PosX, TransformCache.PosY,
+            TransformCache.PosX + (int)posOffset.X, TransformCache.PosY + (int)posOffset.Y,
             TransformCache.SizeX, TransformCache.SizeY,
             TransformCache.Rotation, Vector2.Zero, ImageColor,
             ScalingMode

@@ -99,6 +99,7 @@ public abstract class GuiObject : ReconEntity
     private Vector2 _anchorpoint = Vector2.Zero;
     private bool _transformdirty = true;
     private Vector2 _lastScreenSize = Vector2.Zero;
+    private Vector2 _lastParentSize = Vector2.Zero;
 
     protected Color4? _overwriteBgColor = null;
 
@@ -108,8 +109,11 @@ public abstract class GuiObject : ReconEntity
         Y = (int)Math.Round(scaled.Y * screensize.Y + scaled.W);
     }
 
-    protected virtual void UpdateTransform(Vector2 screenSize)
+    protected virtual void UpdateTransform(Vector2 screenSize, Vector2 parentSize)
     {
+        if (screenSize == _lastScreenSize) return;
+        if (parentSize == _lastParentSize) return;
+
         Vector2 parentGlobalPos = Vector2.Zero;
         float parentGlobalRot = 0f;
 
@@ -117,17 +121,17 @@ public abstract class GuiObject : ReconEntity
         {
             parentGlobalPos = parent.Transform.Position;
             parentGlobalRot = parent.Transform.ToRotation();
-            screenSize = new Vector2(parent.TransformCache.SizeX, parent.TransformCache.SizeY);
+            //screenSize = new Vector2(parent.TransformCache.SizeX, parent.TransformCache.SizeY);
             if (parent is ScrollingFrame scroll) parentGlobalPos -= scroll.CanvasPosition;
         }
         if (Parent is GuiContainer container)
         {
             parentGlobalPos += container.ScreenInsets;
-            screenSize -= container.ScreenInsets * 2;
+            //screenSize -= container.ScreenInsets * 2;
         }
 
-        ScaledSizeToAbsoluteSize(_position, screenSize, out int PosX, out int PosY);
-        ScaledSizeToAbsoluteSize(_size, screenSize, out int SizeX, out int SizeY);
+        ScaledSizeToAbsoluteSize(_position, parentSize, out int PosX, out int PosY);
+        ScaledSizeToAbsoluteSize(_size, parentSize, out int SizeX, out int SizeY);
 
         Vector2 localPos = new(PosX, PosY);
         Vector2 size = new(SizeX, SizeY);
@@ -149,44 +153,48 @@ public abstract class GuiObject : ReconEntity
         TransformCache.SizeY = SizeY;
         TransformCache.ScreenSize = screenSize;
 
+        foreach (GuiComponent comp in _components) comp.PostTransform(ref TransformCache);
+
         Vector2 extents = size * 0.5f;
         Vector2 globalCenter = globalPivot + ReconMath.RotatePoint(extents - anchorOffset, globalRot);
         GlobalBounds = new OOBB2(globalCenter, extents, globalRot);
 
         Transform = new Coords2(globalTopLeft, globalRot);
         _lastScreenSize = screenSize;
+        _lastParentSize = parentSize;
         _transformdirty = false;
 
-        AssignedContainer?.ContainerGrid.UpdateObject(this);
-
-        foreach (ReconEntity entity in Children)
-            if (entity is GuiObject obj)
-                obj.UpdateTransform(screenSize);
+        AssignedContainer?.ContainerGrid.UpdateObject(this);    
     }
 
-    public virtual void Draw(IRenderer renderer)
+    public virtual void Draw(IRenderer renderer, Vector2 parentSize, Vector2 posOffset)
     {
-        Vector2 screenSize = renderer.GetScreenSize();
-        if (_transformdirty || _lastScreenSize != screenSize) UpdateTransform(screenSize);
+        UpdateTransform(renderer.GetScreenSize(), parentSize);
+        foreach (GuiComponent comp in _components) comp.BeforeDraw(renderer, ref TransformCache);
         renderer.DrawRect(
-            TransformCache.PosX, TransformCache.PosY,
+            TransformCache.PosX + (int)posOffset.X, TransformCache.PosY + (int)posOffset.Y,
             TransformCache.SizeX, TransformCache.SizeY,
             TransformCache.Rotation, Vector2.Zero, _overwriteBgColor != null ? _overwriteBgColor.Value : BackgroundColor
         );
+        foreach (GuiComponent comp in _components) comp.AfterDraw(renderer, ref TransformCache);
     }
 
     protected List<GuiObject> _sortedChildren = [];
     protected List<GuiComponent> _components = [];
-    public virtual void DrawSelfAndChildren(IRenderer renderer)
+    public virtual void DrawSelfAndChildren(IRenderer renderer, Vector2 parentSize, Vector2 posOffset)
     {
-        Draw(renderer);
+        Draw(renderer, parentSize, posOffset);
 
         if (ClipDescendants) renderer.PushClipRect(
             TransformCache.PosX, TransformCache.PosY,
             TransformCache.SizeX, TransformCache.SizeY
         );
 
-        foreach (GuiObject obj in _sortedChildren) obj.DrawSelfAndChildren(renderer);
+        Vector2 objectSize = new(TransformCache.SizeX, TransformCache.SizeY);
+
+        foreach (GuiComponent comp in _components) comp.BeforeChildrenDraw(renderer, ref TransformCache, ref objectSize, ref posOffset);
+        foreach (GuiObject obj in _sortedChildren) obj.DrawSelfAndChildren(renderer, objectSize, posOffset);
+        foreach (GuiComponent comp in _components) comp.AfterChildrenDraw(renderer, ref TransformCache, ref objectSize, ref posOffset);
 
         if (ClipDescendants) renderer.PopClipRect();
     }
@@ -221,12 +229,12 @@ public abstract class GuiObject : ReconEntity
         };
     }
 
-    public override void AddChild(ReconEntity entity)
+    protected override void AddChild(ReconEntity entity)
     {
         base.AddChild(entity);
         UpdateChildrenOrder();
     }
-    public override void RemoveChild(ReconEntity entity)
+    protected override void RemoveChild(ReconEntity entity)
     {
         base.RemoveChild(entity);
         UpdateChildrenOrder();

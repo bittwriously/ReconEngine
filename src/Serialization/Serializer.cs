@@ -68,7 +68,7 @@ public static class PrefabSerializer
             foreach (var childId in se.ChildLocalIds)
             {
                 if (localIdToEntity.TryGetValue(childId, out var child))
-                    parent.AddChild(child);
+                    child.Parent = parent;
             }
         }
         ctx.FlushReferences();

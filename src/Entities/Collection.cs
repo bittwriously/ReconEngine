@@ -7,7 +7,7 @@ public class Collection : ReconEntity
     private readonly Dictionary<string, ReconEntity> _namedChildren = new();
     private readonly Dictionary<ReconEntity, Action> _nameHandlers = new();
 
-    public override void AddChild(ReconEntity entity)
+    protected override void AddChild(ReconEntity entity)
     {
         if (_namedChildren.ContainsKey(entity.Name))
             throw new InvalidOperationException(
@@ -33,7 +33,7 @@ public class Collection : ReconEntity
         base.AddChild(entity);
     }
 
-    public override void RemoveChild(ReconEntity entity)
+    protected override void RemoveChild(ReconEntity entity)
     {
         _namedChildren.Remove(entity.Name);
         if (_nameHandlers.TryGetValue(entity, out var handler))

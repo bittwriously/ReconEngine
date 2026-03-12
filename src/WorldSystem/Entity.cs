@@ -233,7 +233,7 @@ public class ReconEntity : IUpdatable
         _isPathDirty = false;
         return _pathCache;
     }
-    public virtual void AddChild(ReconEntity entity)
+    protected virtual void AddChild(ReconEntity entity)
     {
         uint lastid = _hierarchyData.ChildrenExit;
 
@@ -247,7 +247,7 @@ public class ReconEntity : IUpdatable
 
         ChildAdded?.Invoke(this, entity);
     }
-    public virtual void RemoveChild(ReconEntity entity)
+    protected virtual void RemoveChild(ReconEntity entity)
     {
         uint nextid = entity._hierarchyData.SiblingAfter;
         uint previd = entity._hierarchyData.SiblingBefore;
@@ -400,7 +400,7 @@ public class ReconEntity : IUpdatable
         foreach (var child in this.Children)
         {
             var childClone = child.Clone();
-            clone.AddChild(childClone);
+            childClone.Parent = clone;
         }
         return clone;
     }
